@@ -112,7 +112,15 @@
                 <div id="employees-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Manage Employees</h2><div id="employee-controls" class="space-y-2"></div></div>
             </div>
             <div class="lg:col-span-1 space-y-6">
-                <div id="stock-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Ingredient Stock</h2><div id="stock-items" class="space-y-3"></div></div>
+                <div id="stock-panel" class="panel p-4 rounded-md">
+                    <h2 class="text-lg mb-4 text-yellow-pixel">Ingredient Stock</h2>
+                    <div class="grid grid-cols-3 gap-2 mb-4 text-xs">
+                        <button class="btn py-1" onclick="bulkAddStock(100)">+100 All</button>
+                        <button class="btn py-1" onclick="bulkSetStock(0)">Set All 0</button>
+                        <button class="btn py-1" onclick="bulkSetStock(100)">Set All 100</button>
+                    </div>
+                    <div id="stock-items" class="space-y-3"></div>
+                </div>
                  <div id="settings-panel" class="panel p-4 rounded-md space-y-3">
                     <h2 class="text-lg mb-2 text-yellow-pixel">Restaurant Settings</h2>
                     <div>
@@ -321,6 +329,56 @@
             } else {
                 logMessage({ type: 'INVENTORY_FAIL', message: `Not enough cash to buy ${ingredient.name}.`, color: 'text-red-pixel', details: { item: ingredient.name, cost } });
                 updateUI();
+            }
+        }
+
+        function bulkAddStock(amount) {
+            let totalCost = 0;
+            gameState.unlocks.ingredients.forEach(key => {
+                totalCost += GAME_DATA.INGREDIENTS[key].cost * amount;
+            });
+
+            if (gameState.finances.cash >= totalCost) {
+                gameState.finances.cash -= totalCost;
+                gameState.unlocks.ingredients.forEach(key => {
+                    gameState.inventory.stock[key] += amount;
+                });
+                logMessage({ type: 'INVENTORY', message: `Bulk purchased +${amount} of all ingredients for $${totalCost}.`, color: 'text-blue-pixel', details: { amount, cost: totalCost, cashAfter: gameState.finances.cash } });
+                updateUI();
+            } else {
+                logMessage({ type: 'INVENTORY_FAIL', message: `Not enough cash for bulk purchase (cost: $${totalCost}).`, color: 'text-red-pixel' });
+            }
+        }
+
+        function bulkSetStock(amount) {
+            if (amount === 0) {
+                gameState.unlocks.ingredients.forEach(key => {
+                    gameState.inventory.stock[key] = 0;
+                });
+                logMessage({ type: 'INVENTORY', message: `Reset all stock to 0.`, color: 'text-yellow-pixel' });
+                updateUI();
+                return;
+            }
+
+            let totalCost = 0;
+            gameState.unlocks.ingredients.forEach(key => {
+                const needed = amount - gameState.inventory.stock[key];
+                if (needed > 0) {
+                    totalCost += GAME_DATA.INGREDIENTS[key].cost * needed;
+                }
+            });
+
+            if (gameState.finances.cash >= totalCost) {
+                gameState.finances.cash -= totalCost;
+                gameState.unlocks.ingredients.forEach(key => {
+                    if (gameState.inventory.stock[key] < amount) {
+                        gameState.inventory.stock[key] = amount;
+                    }
+                });
+                logMessage({ type: 'INVENTORY', message: `Bulk topped up all ingredients to ${amount} for $${totalCost}.`, color: 'text-blue-pixel', details: { amount, cost: totalCost, cashAfter: gameState.finances.cash } });
+                updateUI();
+            } else {
+                logMessage({ type: 'INVENTORY_FAIL', message: `Not enough cash to top up stock (cost: $${totalCost}).`, color: 'text-red-pixel' });
             }
         }
         

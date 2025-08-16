@@ -43,10 +43,18 @@
         .log-message {
             border-bottom: 1px dashed #404040;
         }
+        .json-textarea {
+            background-color: #1a1a1a;
+            border: 2px solid #505050;
+            color: #E0E0E0;
+            font-family: monospace;
+            font-size: 12px;
+        }
         .text-green-pixel { color: #32CD32; }
         .text-red-pixel { color: #FF4136; }
         .text-yellow-pixel { color: #FFDC00; }
         .text-blue-pixel { color: #0074D9; }
+        .text-purple-pixel { color: #B10DC9; }
         /* Custom scrollbar for a retro feel */
         ::-webkit-scrollbar {
             width: 12px;
@@ -97,12 +105,10 @@
 
             <!-- Left Column: Menu & Employees -->
             <div class="lg:col-span-1 space-y-6">
-                <!-- Menu Panel -->
                 <div id="menu-panel" class="panel p-4 rounded-md">
                     <h2 class="text-lg mb-4 text-yellow-pixel">Menu</h2>
                     <div id="menu-items" class="space-y-3"></div>
                 </div>
-                <!-- Employees Panel -->
                 <div id="employees-panel" class="panel p-4 rounded-md">
                     <h2 class="text-lg mb-4 text-yellow-pixel">Employees</h2>
                     <div id="employee-list" class="space-y-2 mb-4"></div>
@@ -112,37 +118,45 @@
 
             <!-- Middle Column: Stock & Actions -->
             <div class="lg:col-span-1 space-y-6">
-                <!-- Stock Panel -->
                 <div id="stock-panel" class="panel p-4 rounded-md">
                     <h2 class="text-lg mb-4 text-yellow-pixel">Ingredient Stock</h2>
                     <div id="stock-items" class="space-y-3"></div>
                 </div>
-                 <!-- Actions Panel -->
-                <div id="actions-panel" class="panel p-4 rounded-md">
-                    <h2 class="text-lg mb-4 text-yellow-pixel">Actions</h2>
+                <div id="actions-panel" class="panel p-4 rounded-md space-y-3">
+                    <h2 class="text-lg mb-2 text-yellow-pixel">Actions</h2>
                     <button id="next-day-btn" class="btn w-full py-3 rounded-md text-xl">Start Next Day</button>
+                    <button id="json-log-btn" class="btn w-full py-2 rounded-md">View JSON Log</button>
                 </div>
             </div>
-
 
             <!-- Right Column: Game Log -->
             <div class="lg:col-span-1">
                 <div id="log-panel" class="panel p-4 rounded-md h-full">
                     <h2 class="text-lg mb-4 text-yellow-pixel">Daily Log</h2>
-                    <div id="game-log" class="h-96 overflow-y-auto pr-2 space-y-2 text-sm">
-                        <!-- Log messages will appear here -->
-                    </div>
+                    <div id="game-log" class="h-96 overflow-y-auto pr-2 space-y-2 text-sm"></div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Modal for Game Over -->
+    <!-- Game Over Modal -->
     <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
         <div class="panel p-8 rounded-lg text-center max-w-sm">
             <h2 class="text-3xl text-red-pixel mb-4">Game Over</h2>
             <p id="game-over-message" class="mb-6">You've run out of money!</p>
             <button id="restart-btn" class="btn px-8 py-3 rounded-md text-lg">Restart Game</button>
+        </div>
+    </div>
+
+    <!-- JSON Log Modal -->
+    <div id="json-log-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div class="panel p-6 rounded-lg text-center max-w-2xl w-full">
+            <h2 class="text-2xl text-yellow-pixel mb-4">Daily Log (JSON)</h2>
+            <textarea id="json-log-textarea" readonly class="json-textarea w-full h-64 p-2 rounded-md mb-4"></textarea>
+            <div class="flex gap-4">
+                <button id="copy-log-btn" class="btn flex-1 py-2 rounded-md">Copy to Clipboard</button>
+                <button id="close-log-btn" class="btn flex-1 py-2 rounded-md">Close</button>
+            </div>
         </div>
     </div>
 
@@ -161,8 +175,12 @@
         const gameOverModal = document.getElementById('game-over-modal');
         const gameOverMessage = document.getElementById('game-over-message');
         const restartBtn = document.getElementById('restart-btn');
+        const jsonLogBtn = document.getElementById('json-log-btn');
+        const jsonLogModal = document.getElementById('json-log-modal');
+        const jsonLogTextarea = document.getElementById('json-log-textarea');
+        const copyLogBtn = document.getElementById('copy-log-btn');
+        const closeLogBtn = document.getElementById('close-log-btn');
 
-        // --- GAME STATE ---
         let gameState = {};
 
         // --- GAME DATA ---
@@ -173,23 +191,40 @@
             cheese: { name: 'Cheese', cost: 5 },
             tomato: { name: 'Tomato', cost: 3 },
             dough: { name: 'Dough', cost: 4 },
+            potato: { name: 'Potato', cost: 1 },
+            beef: { name: 'Beef', cost: 8 },
+            bun: { name: 'Bun', cost: 2 },
+            lettuce: { name: 'Lettuce', cost: 2 },
+            milkshake_mix: { name: 'Milkshake Mix', cost: 6 },
+            fancy_cheese: { name: 'Fancy Cheese', cost: 9},
+            bacon: { name: 'Bacon', cost: 7}
         };
 
         const MENU = {
             bread: { name: 'Bread', price: 8, ingredients: { flour: 2, eggs: 1 } },
             cake: { name: 'Cake', price: 15, ingredients: { flour: 3, sugar: 4, eggs: 2 } },
             pizza: { name: 'Pizza', price: 20, ingredients: { dough: 1, cheese: 2, tomato: 2 } },
+            fries: { name: 'Fries', price: 7, ingredients: { potato: 3 } },
+            burger: { name: 'Burger', price: 25, ingredients: { beef: 1, bun: 1, lettuce: 1 } },
+            milkshake: { name: 'Milkshake', price: 12, ingredients: { milkshake_mix: 1, sugar: 1 } },
+            deluxe_burger: { name: 'Deluxe Burger', price: 35, ingredients: { beef: 1, bun: 1, fancy_cheese: 1, bacon: 1 } },
+            gourmet_pizza: { name: 'Gourmet Pizza', price: 45, ingredients: { dough: 1, fancy_cheese: 2, bacon: 2, tomato: 1 } }
         };
         
         const EMPLOYEE_TYPES = {
-            cook: { name: 'Cook', salary: 100, efficiency: 10 }, // Efficiency = max items they can cook per day
+            cook: { name: 'Cook', salary: 100, efficiency: 10 },
         };
+
+        const UNLOCKS = [
+            { day: 3, ingredients: ['potato', 'beef', 'bun'], menu: ['fries', 'burger'], message: "New items available: Fries and Burgers!" },
+            { day: 5, ingredients: ['lettuce', 'milkshake_mix'], menu: ['milkshake'], message: "You can now sell Milkshakes!" },
+            { day: 10, ingredients: ['fancy_cheese', 'bacon'], menu: [], message: "Premium ingredients unlocked: Fancy Cheese & Bacon!" },
+            { day: 14, menu: ['deluxe_burger'], message: "A new creation: The Deluxe Burger is on the menu!" },
+            { day: 30, menu: ['gourmet_pizza'], message: "Master Chef! You've unlocked the Gourmet Pizza recipe!" }
+        ];
 
         // --- CORE GAME FUNCTIONS ---
 
-        /**
-         * Initializes the game state to its default values.
-         */
         function initGame() {
             gameState = {
                 day: 1,
@@ -197,38 +232,31 @@
                 dailyRevenue: 0,
                 employees: [],
                 stock: {
-                    flour: 20,
-                    sugar: 20,
-                    eggs: 15,
-                    cheese: 10,
-                    tomato: 10,
-                    dough: 10,
+                    flour: 20, sugar: 20, eggs: 15, cheese: 10, tomato: 10, dough: 10,
+                    potato: 0, beef: 0, bun: 0, lettuce: 0, milkshake_mix: 0, fancy_cheese: 0, bacon: 0
                 },
+                unlockedIngredients: ['flour', 'sugar', 'eggs', 'cheese', 'tomato', 'dough'],
+                unlockedMenuItems: ['bread', 'cake', 'pizza'],
                 log: [],
                 isGameOver: false,
             };
-            logMessage("Welcome to your 8-Bit Restaurant! Buy ingredients and serve customers to make a profit.", 'text-yellow-pixel');
+            logMessage("Welcome to your 8-Bit Restaurant! Let's get cooking!", 'text-yellow-pixel');
             updateUI();
             gameOverModal.classList.add('hidden');
+            jsonLogModal.classList.add('hidden');
         }
 
-        /**
-         * Advances the game to the next day, processing sales and expenses.
-         */
         function nextDay() {
             if (gameState.isGameOver) return;
 
-            // 1. Reset daily revenue and clear log
             gameState.dailyRevenue = 0;
             gameState.log = [];
             
-            // 2. Pay Employees
             const totalSalary = gameState.employees.reduce((sum, emp) => sum + emp.salary, 0);
             gameState.cash -= totalSalary;
             logMessage(`Paid $${totalSalary} in salaries.`, 'text-red-pixel');
 
-            // 3. Simulate Sales
-            const maxDishes = gameState.employees.reduce((sum, emp) => sum + emp.efficiency, 5); // Base of 5 dishes + employee efficiency
+            const maxDishes = gameState.employees.reduce((sum, emp) => sum + emp.efficiency, 5);
             const customers = Math.floor(Math.random() * maxDishes) + 1;
             logMessage(`You had ${customers} customers today.`, 'text-blue-pixel');
 
@@ -236,28 +264,37 @@
                 sellMenuItem();
             }
 
-            // 4. Update day and check for game over
             gameState.day++;
             logMessage(`Day ${gameState.day-1} summary: Revenue: $${gameState.dailyRevenue}, Expenses: $${totalSalary}.`, 'text-yellow-pixel');
             
+            checkForUnlocks();
+
             if (gameState.cash < 0) {
                 endGame("You've run out of money and fallen into debt!");
-            } else if (gameState.cash > 5000) {
+            } else if (gameState.cash > 10000) {
                 endGame("Congratulations! You've built a restaurant empire!");
             }
             
             updateUI();
         }
 
-        /**
-         * Simulates a single customer buying a random menu item.
-         */
+        function checkForUnlocks() {
+            const unlock = UNLOCKS.find(u => u.day === gameState.day);
+            if (unlock) {
+                if (unlock.ingredients) {
+                    gameState.unlockedIngredients.push(...unlock.ingredients);
+                }
+                if (unlock.menu) {
+                    gameState.unlockedMenuItems.push(...unlock.menu);
+                }
+                logMessage(`LEVEL UP! ${unlock.message}`, 'text-purple-pixel');
+            }
+        }
+
         function sellMenuItem() {
-            const menuKeys = Object.keys(MENU);
-            const randomItemKey = menuKeys[Math.floor(Math.random() * menuKeys.length)];
+            const randomItemKey = gameState.unlockedMenuItems[Math.floor(Math.random() * gameState.unlockedMenuItems.length)];
             const item = MENU[randomItemKey];
 
-            // Check if there are enough ingredients
             let canMake = true;
             for (const ingredient in item.ingredients) {
                 if (gameState.stock[ingredient] < item.ingredients[ingredient]) {
@@ -267,11 +304,9 @@
             }
 
             if (canMake) {
-                // Deduct ingredients
                 for (const ingredient in item.ingredients) {
                     gameState.stock[ingredient] -= item.ingredients[ingredient];
                 }
-                // Add cash
                 gameState.cash += item.price;
                 gameState.dailyRevenue += item.price;
                 logMessage(`Sold a ${item.name} for $${item.price}.`, 'text-green-pixel');
@@ -280,14 +315,8 @@
             }
         }
         
-        /**
-         * Buys a specified amount of an ingredient.
-         * @param {string} ingredientKey - The key of the ingredient to buy.
-         * @param {number} amount - The amount to purchase.
-         */
         function buyIngredient(ingredientKey, amount) {
             if (gameState.isGameOver || amount <= 0) return;
-
             const ingredient = INGREDIENTS[ingredientKey];
             const cost = ingredient.cost * amount;
 
@@ -298,13 +327,10 @@
                 updateUI();
             } else {
                 logMessage(`Not enough cash to buy ${ingredient.name}.`, 'text-red-pixel');
-                updateUI(); // To show the log message
+                updateUI();
             }
         }
         
-        /**
-         * Hires a new employee.
-         */
         function hireEmployee() {
              if (gameState.isGameOver) return;
              const cook = EMPLOYEE_TYPES.cook;
@@ -313,23 +339,15 @@
              updateUI();
         }
 
-        /**
-         * Ends the game and shows the game over modal.
-         * @param {string} message - The message to display.
-         */
         function endGame(message) {
             gameState.isGameOver = true;
             gameOverMessage.textContent = message;
             gameOverModal.classList.remove('hidden');
         }
 
-        // --- UI RENDERING FUNCTIONS ---
+        // --- UI & MODAL FUNCTIONS ---
 
-        /**
-         * Updates the entire UI based on the current game state.
-         */
         function updateUI() {
-            // Update Stats
             dayDisplay.textContent = gameState.day;
             cashDisplay.textContent = `$${gameState.cash}`;
             revenueDisplay.textContent = `$${gameState.dailyRevenue}`;
@@ -337,10 +355,9 @@
             expensesDisplay.textContent = `$${totalSalary}`;
             cashDisplay.className = `text-2xl ${gameState.cash >= 0 ? 'text-green-pixel' : 'text-red-pixel'}`;
 
-
-            // Render Menu
+            // Render Menu based on unlocked items
             menuItemsContainer.innerHTML = '';
-            for (const key in MENU) {
+            gameState.unlockedMenuItems.forEach(key => {
                 const item = MENU[key];
                 const ingredientsText = Object.entries(item.ingredients)
                     .map(([ingKey, amount]) => `${amount} ${INGREDIENTS[ingKey].name}`)
@@ -351,27 +368,21 @@
                     <p class="text-xs text-gray-400">${ingredientsText}</p>
                 `;
                 menuItemsContainer.appendChild(menuItemEl);
-            }
+            });
 
             // Render Employees
-            employeeListContainer.innerHTML = '';
-            if (gameState.employees.length === 0) {
-                employeeListContainer.innerHTML = `<p class="text-gray-400">No employees yet.</p>`;
-            } else {
-                gameState.employees.forEach((emp, index) => {
-                    const empEl = document.createElement('div');
-                    empEl.className = 'flex justify-between items-center';
-                    empEl.innerHTML = `
+            employeeListContainer.innerHTML = gameState.employees.length === 0 
+                ? `<p class="text-gray-400">No employees yet.</p>`
+                : gameState.employees.map((emp, index) => `
+                    <div class="flex justify-between items-center">
                         <p>${emp.name} #${index + 1}</p>
                         <p class="text-red-pixel">-$${emp.salary}/day</p>
-                    `;
-                    employeeListContainer.appendChild(empEl);
-                });
-            }
+                    </div>
+                `).join('');
 
-            // Render Stock
+            // Render Stock based on unlocked ingredients
             stockItemsContainer.innerHTML = '';
-            for (const key in INGREDIENTS) {
+            gameState.unlockedIngredients.forEach(key => {
                 const ingredient = INGREDIENTS[key];
                 const stockItemEl = document.createElement('div');
                 stockItemEl.className = 'grid grid-cols-3 items-center gap-2';
@@ -383,41 +394,54 @@
                     </div>
                 `;
                 stockItemsContainer.appendChild(stockItemEl);
-            }
+            });
             
-            // Render Log
             renderLog();
         }
 
-        /**
-         * Adds a message to the game log and keeps it at a reasonable size.
-         * @param {string} message - The message text.
-         * @param {string} colorClass - The Tailwind CSS color class for the message.
-         */
         function logMessage(message, colorClass = 'text-gray-300') {
-            gameState.log.unshift({ text: message, color: colorClass });
-            if (gameState.log.length > 50) {
-                gameState.log.pop();
-            }
-            if(gameLogContainer.parentElement.offsetParent) { // only render if visible
-               renderLog();
-            }
+            const timestamp = `Day ${gameState.day}`;
+            gameState.log.unshift({ timestamp, text: message, color: colorClass });
+            if (gameState.log.length > 100) gameState.log.pop();
+            if(document.body.contains(gameLogContainer)) renderLog();
         }
         
-        /**
-         * Renders the current log messages to the screen.
-         */
         function renderLog() {
             gameLogContainer.innerHTML = gameState.log.map(msg => 
                 `<p class="log-message pb-1 ${msg.color}">${msg.text}</p>`
             ).join('');
         }
 
+        function showJsonLog() {
+            jsonLogTextarea.value = JSON.stringify(gameState.log, null, 2);
+            jsonLogModal.classList.remove('hidden');
+        }
+
+        function hideJsonLog() {
+            jsonLogModal.classList.add('hidden');
+        }
+
+        function copyLogToClipboard() {
+            jsonLogTextarea.select();
+            // Using document.execCommand for better compatibility in sandboxed environments
+            try {
+                document.execCommand('copy');
+                copyLogBtn.textContent = 'Copied!';
+                setTimeout(() => { copyLogBtn.textContent = 'Copy to Clipboard'; }, 2000);
+            } catch (err) {
+                console.error('Failed to copy log: ', err);
+                copyLogBtn.textContent = 'Error!';
+                 setTimeout(() => { copyLogBtn.textContent = 'Copy to Clipboard'; }, 2000);
+            }
+        }
 
         // --- EVENT LISTENERS ---
         nextDayBtn.addEventListener('click', nextDay);
         hireBtn.addEventListener('click', hireEmployee);
         restartBtn.addEventListener('click', initGame);
+        jsonLogBtn.addEventListener('click', showJsonLog);
+        closeLogBtn.addEventListener('click', hideJsonLog);
+        copyLogBtn.addEventListener('click', copyLogToClipboard);
 
         // --- INITIALIZE GAME ---
         window.onload = initGame;

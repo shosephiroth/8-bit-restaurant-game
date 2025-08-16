@@ -199,6 +199,10 @@
                 },
                 settings: { maxCustomers: 10 },
                 upgrades: { oven: false, marketing_active_days: 0 },
+                events: {
+                    critic_visit_today: false,
+                    critic_sales_target: 10,
+                },
                 history: {},
                 meta: { isGameOver: false, gameStartDate: new Date().toISOString(), timeZone: 'local' }
             };
@@ -223,6 +227,9 @@
                 logMessage({ type: 'EXPENSE', message: `Paid $${totalSalary} in salaries.`, color: 'text-red-pixel', details: { amount: totalSalary, reason: 'Salaries', cashAfter: gameState.finances.cash } }, getCurrentGameDate(GAME_DATA.OPEN_HOUR));
             }
 
+            // --- DAILY EVENT CHECK ---
+            handleDailyEvents();
+
             const cooks = gameState.staff.employees.filter(e => e.effect.type === 'efficiency'), cashiers = gameState.staff.employees.filter(e => e.type === 'cashier'), drivers = gameState.staff.employees.filter(e => e.type === 'driver');
             const cookEfficiency = cooks.reduce((sum, e) => sum + e.effect.value, 0);
             let totalPotentialCustomers = gameState.settings.maxCustomers;
@@ -234,13 +241,17 @@
 
             const customersToday = Math.floor(Math.random() * (totalPotentialCustomers + 1));
             let itemsCooked = 0;
+            let successfulSalesToday = 0;
 
             if (cooks.length === 0) logMessage({ type: 'SYSTEM', message: `No cooks on staff! No food can be prepared.`, color: 'text-red-pixel' }, getCurrentGameDate(12));
             else if (cashiers.length === 0) logMessage({ type: 'SYSTEM', message: `${customersToday} customers came, but with no cashier, no sales could be made.`, color: 'text-red-pixel' }, getCurrentGameDate(12));
             else {
                 logMessage({type: 'SYSTEM', message: `${customersToday} customers visited today.`, color: 'text-blue-pixel'}, getCurrentGameDate(GAME_DATA.OPEN_HOUR));
                 for (let i = 0; i < customersToday && itemsCooked < cookEfficiency; i++) {
-                    if (sellMenuItem(getCurrentGameDate(GAME_DATA.OPEN_HOUR + Math.floor(Math.random() * (GAME_DATA.CLOSE_HOUR - GAME_DATA.OPEN_HOUR)), Math.floor(Math.random() * 60)), false)) itemsCooked++;
+                    if (sellMenuItem(getCurrentGameDate(GAME_DATA.OPEN_HOUR + Math.floor(Math.random() * (GAME_DATA.CLOSE_HOUR - GAME_DATA.OPEN_HOUR)), Math.floor(Math.random() * 60)), false)) {
+                        itemsCooked++;
+                        successfulSalesToday++;
+                    }
                 }
             }
 
@@ -249,6 +260,17 @@
             else {
                  for(let i = 0; i < totalDeliveries && itemsCooked < cookEfficiency; i++) {
                     if (sellMenuItem(getCurrentGameDate(GAME_DATA.OPEN_HOUR + Math.floor(Math.random() * (GAME_DATA.CLOSE_HOUR - GAME_DATA.OPEN_HOUR)), Math.floor(Math.random() * 60)), true)) itemsCooked++;
+                }
+            }
+
+            // --- END OF DAY EVENT RESOLUTION ---
+            if (gameState.events.critic_visit_today) {
+                if (successfulSalesToday >= gameState.events.critic_sales_target) {
+                    const randomMenuItemKey = gameState.unlocks.menu[Math.floor(Math.random() * gameState.unlocks.menu.length)];
+                    GAME_DATA.MENU[randomMenuItemKey].popularity += 2;
+                    logMessage({ type: 'EVENT', message: `Success! The food critic was impressed. ${GAME_DATA.MENU[randomMenuItemKey].name} is now more popular!`, color: 'text-purple-pixel' });
+                } else {
+                    logMessage({ type: 'EVENT', message: `The food critic left unimpressed.`, color: 'text-red-pixel' });
                 }
             }
 
@@ -262,6 +284,15 @@
             else if (gameState.finances.cash > 25000) endGame("Congratulations! You've built a restaurant empire!");
             
             updateUI();
+        }
+        
+        function handleDailyEvents() {
+            gameState.events.critic_visit_today = false; // Reset
+            // Critic has a chance to visit after day 5
+            if (gameState.day > 5 && Math.random() < 0.2) { // 20% chance
+                gameState.events.critic_visit_today = true;
+                logMessage({ type: 'EVENT', message: `A food critic is visiting today! Serve ${gameState.events.critic_sales_target} customers to impress them!`, color: 'text-yellow-pixel' }, getCurrentGameDate(GAME_DATA.OPEN_HOUR, 1));
+            }
         }
 
         function checkForUnlocks() {

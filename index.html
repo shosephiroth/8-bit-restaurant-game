@@ -303,31 +303,34 @@
             const item = GAME_DATA.MENU[randomItemKey];
             if (!item) return false;
 
-            // Check for ingredients first
-            let canMake = Object.entries(item.ingredients).every(([ingKey, amount]) => gameState.inventory.stock[ingKey] >= amount);
+            let ingredientsCopy = {...item.ingredients};
+            if(gameState.upgrades.oven && (randomItemKey === 'pizza' || randomItemKey === 'gourmet_pizza' || randomItemKey === 'bread')) {
+                ingredientsCopy.dough = Math.max(0, ingredientsCopy.dough -1);
+            }
+
+            let canMake = Object.entries(ingredientsCopy).every(([ingKey, amount]) => gameState.inventory.stock[ingKey] >= amount);
             if (!canMake) {
-                logMessage({ type: 'SALE_FAIL', message: `Couldn't make ${item.name}. Out of ingredients!`, color: 'text-red-pixel', details: { item: item.name } }, date);
+                logMessage({ type: 'SALE_FAIL', message: `Couldn't make ${item.name}. Out of ingredients!`, color: 'text-red-pixel', details: { item: item.name, missing: ingredientsCopy } }, date);
                 return false;
             }
 
-            // Check for Action Points
             const requiredAP = { cooking: 1, service: isDelivery ? 0 : 1, delivery: isDelivery ? 1 : 0 };
             if (!hasEnoughAP(ap, requiredAP)) {
                 let reason = !hasEnoughAP(ap, {cooking:1}) ? 'cooking' : (isDelivery ? 'delivery' : 'service');
                 logMessage({ type: 'SALE_FAIL', message: `Order for ${item.name} failed. Not enough ${reason} capacity.`, color: 'text-red-pixel', details: { item: item.name } }, date);
                 return false;
             }
-
-            // Deduct resources
-            deductAP(ap, requiredAP);
-            Object.entries(item.ingredients).forEach(([ingKey, amount]) => gameState.inventory.stock[ingKey] -= amount);
             
-            // Calculate revenue
+            const stockBefore = { ...gameState.inventory.stock };
+
+            deductAP(ap, requiredAP);
+            Object.entries(ingredientsCopy).forEach(([ingKey, amount]) => gameState.inventory.stock[ingKey] -= amount);
+            
             let salePrice = item.price;
             gameState.finances.cash += salePrice;
             gameState.finances.dailyRevenue += salePrice;
 
-            logMessage({ type: 'SALE', message: `${isDelivery ? '[DELIVERY] ' : ''}Sold a ${item.name} for $${item.price}.`, color: 'text-green-pixel', details: { item: item.name, price: item.price, cashAfter: gameState.finances.cash } }, date);
+            logMessage({ type: 'SALE', message: `${isDelivery ? '[DELIVERY] ' : ''}Sold a ${item.name} for $${item.price}.`, color: 'text-green-pixel', details: { item: item.name, price: item.price, cashAfter: gameState.finances.cash, ingredientsUsed: ingredientsCopy, stockBefore, stockAfter: { ...gameState.inventory.stock } } }, date);
             return true;
         }
 
@@ -527,8 +530,10 @@
 
             switch (log.type) {
                 case 'SALE':
-                    const ingredientsText = Object.entries(details.ingredientsUsed).map(([key, amount]) => `${amount} ${GAME_DATA.INGREDIENTS[key].name}`).join(', ');
-                    detailsHTML = `<p class="text-xs text-gray-400 pl-4">Ingredients: ${ingredientsText}</p><p class="text-xs text-gray-400 pl-4">Cash after sale: $${details.cashAfter}</p>`;
+                    if (details.ingredientsUsed) {
+                        const ingredientsText = Object.entries(details.ingredientsUsed).map(([key, amount]) => `${amount} ${GAME_DATA.INGREDIENTS[key].name}`).join(', ');
+                        detailsHTML = `<p class="text-xs text-gray-400 pl-4">Ingredients: ${ingredientsText}</p><p class="text-xs text-gray-400 pl-4">Cash after sale: $${details.cashAfter}</p>`;
+                    }
                     break;
                 case 'INVENTORY': detailsHTML = `<p class="text-xs text-gray-400 pl-4">Cash after purchase: $${details.cashAfter}</p>`; break;
                 case 'EXPENSE': detailsHTML = `<p class="text-xs text-gray-400 pl-4">Cash after expense: $${details.cashAfter}</p>`; break;

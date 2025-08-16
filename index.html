@@ -91,7 +91,7 @@
             <div>
                 <p class="text-sm text-gray-400">Cash</p>
                 <div class="flex items-center justify-center gap-2">
-                    <p id="cash-display" class="text-2xl text-green-pixel">$500</p>
+                    <p id="cash-display" class="text-2xl text-green-pixel">$5000</p>
                     <button id="edit-cash-btn" class="btn btn-small rounded">Edit</button>
                 </div>
             </div>
@@ -143,6 +143,7 @@
                     <button id="export-btn" class="btn w-full py-2 rounded-md">Export Save</button>
                     <button id="import-btn" class="btn w-full py-2 rounded-md">Import Save</button>
                     <input type="file" id="import-file-input" class="hidden" accept=".json">
+                    <button id="reset-game-btn" class="btn w-full py-2 rounded-md bg-red-800/50 border-red-500">Reset Game</button>
                 </div>
                 <div id="log-panel" class="panel p-4 rounded-md h-full"><h2 class="text-lg mb-4 text-yellow-pixel">Daily Log</h2><div id="game-log" class="h-96 overflow-y-auto pr-2 space-y-2 text-sm"></div></div>
             </div>
@@ -154,12 +155,13 @@
     <div id="json-log-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-6 rounded-lg text-center max-w-2xl w-full"><h2 class="text-2xl text-yellow-pixel mb-4">Full Game Log (JSON)</h2><textarea id="json-log-textarea" readonly class="json-textarea w-full h-64 p-2 rounded-md mb-4"></textarea><div class="flex gap-4"><button id="copy-log-btn" class="btn flex-1 py-2 rounded-md">Copy to Clipboard</button><button id="close-log-btn" class="btn flex-1 py-2 rounded-md">Close</button></div></div></div>
     <div id="edit-cash-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-6 rounded-lg text-center max-w-sm w-full"><h2 class="text-2xl text-yellow-pixel mb-4">Edit Cash</h2><p class="text-sm text-gray-400 mb-4">Enter the new cash amount.</p><input type="number" id="cash-input" class="custom-input w-full p-2 rounded-md mb-4 text-center text-lg" /><p id="cash-error-msg" class="text-red-pixel h-4 mb-2 text-sm"></p><div class="flex gap-4"><button id="save-cash-btn" class="btn flex-1 py-2 rounded-md">Save</button><button id="cancel-cash-btn" class="btn flex-1 py-2 rounded-md">Cancel</button></div></div></div>
     <div id="custom-buy-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-6 rounded-lg text-center max-w-sm w-full"><h2 class="text-2xl text-yellow-pixel mb-4">Buy Custom Amount</h2><p id="custom-buy-item-name" class="text-sm text-gray-400 mb-4">Buying...</p><input type="number" id="custom-buy-input" class="custom-input w-full p-2 rounded-md mb-4 text-center text-lg" placeholder="Enter amount" /><p id="custom-buy-error-msg" class="text-red-pixel h-4 mb-2 text-sm"></p><div class="flex gap-4"><button id="save-custom-buy-btn" class="btn flex-1 py-2 rounded-md">Buy</button><button id="cancel-custom-buy-btn" class="btn flex-1 py-2 rounded-md">Cancel</button></div></div></div>
+    <div id="reset-confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-6 rounded-lg text-center max-w-sm w-full"><h2 class="text-2xl text-red-pixel mb-4">Confirm Reset</h2><p class="text-sm text-gray-400 mb-4">Are you sure you want to restart? All progress will be lost.</p><div class="flex gap-4"><button id="confirm-reset-btn" class="btn flex-1 py-2 rounded-md bg-red-800/50 border-red-500">Confirm</button><button id="cancel-reset-btn" class="btn flex-1 py-2 rounded-md">Cancel</button></div></div></div>
 
     <script>
         // DOM Elements
-        const dayDisplay = document.getElementById('day-display'), timezoneDisplay = document.getElementById('timezone-display'), cashDisplay = document.getElementById('cash-display'), editCashBtn = document.getElementById('edit-cash-btn'), revenueDisplay = document.getElementById('revenue-display'), expensesDisplay = document.getElementById('expenses-display'), menuItemsContainer = document.getElementById('menu-items'), employeeControlsContainer = document.getElementById('employee-controls'), stockItemsContainer = document.getElementById('stock-items'), gameLogContainer = document.getElementById('game-log'), nextDayBtn = document.getElementById('next-day-btn'), timezoneBtn = document.getElementById('timezone-btn'), jsonLogBtn = document.getElementById('json-log-btn'), exportBtn = document.getElementById('export-btn'), importBtn = document.getElementById('import-btn'), importFileInput = document.getElementById('import-file-input'), customerSlider = document.getElementById('customer-slider'), customerCountDisplay = document.getElementById('customer-count-display'), upgradeOvenBtn = document.getElementById('upgrade-oven-btn'), marketingBtn = document.getElementById('marketing-btn');
+        const dayDisplay = document.getElementById('day-display'), timezoneDisplay = document.getElementById('timezone-display'), cashDisplay = document.getElementById('cash-display'), editCashBtn = document.getElementById('edit-cash-btn'), revenueDisplay = document.getElementById('revenue-display'), expensesDisplay = document.getElementById('expenses-display'), menuItemsContainer = document.getElementById('menu-items'), employeeControlsContainer = document.getElementById('employee-controls'), stockItemsContainer = document.getElementById('stock-items'), gameLogContainer = document.getElementById('game-log'), nextDayBtn = document.getElementById('next-day-btn'), timezoneBtn = document.getElementById('timezone-btn'), jsonLogBtn = document.getElementById('json-log-btn'), exportBtn = document.getElementById('export-btn'), importBtn = document.getElementById('import-btn'), importFileInput = document.getElementById('import-file-input'), customerSlider = document.getElementById('customer-slider'), customerCountDisplay = document.getElementById('customer-count-display'), upgradeOvenBtn = document.getElementById('upgrade-oven-btn'), marketingBtn = document.getElementById('marketing-btn'), resetGameBtn = document.getElementById('reset-game-btn');
         // Modals
-        const gameOverModal = document.getElementById('game-over-modal'), gameOverMessage = document.getElementById('game-over-message'), restartBtn = document.getElementById('restart-btn'), jsonLogModal = document.getElementById('json-log-modal'), jsonLogTextarea = document.getElementById('json-log-textarea'), copyLogBtn = document.getElementById('copy-log-btn'), closeLogBtn = document.getElementById('close-log-btn'), editCashModal = document.getElementById('edit-cash-modal'), cashInput = document.getElementById('cash-input'), saveCashBtn = document.getElementById('save-cash-btn'), cancelCashBtn = document.getElementById('cancel-cash-btn'), cashErrorMsg = document.getElementById('cash-error-msg'), customBuyModal = document.getElementById('custom-buy-modal'), customBuyItemName = document.getElementById('custom-buy-item-name'), customBuyInput = document.getElementById('custom-buy-input'), customBuyErrorMsg = document.getElementById('custom-buy-error-msg'), saveCustomBuyBtn = document.getElementById('save-custom-buy-btn'), cancelCustomBuyBtn = document.getElementById('cancel-custom-buy-btn');
+        const gameOverModal = document.getElementById('game-over-modal'), gameOverMessage = document.getElementById('game-over-message'), restartBtn = document.getElementById('restart-btn'), jsonLogModal = document.getElementById('json-log-modal'), jsonLogTextarea = document.getElementById('json-log-textarea'), copyLogBtn = document.getElementById('copy-log-btn'), closeLogBtn = document.getElementById('close-log-btn'), editCashModal = document.getElementById('edit-cash-modal'), cashInput = document.getElementById('cash-input'), saveCashBtn = document.getElementById('save-cash-btn'), cancelCashBtn = document.getElementById('cancel-cash-btn'), cashErrorMsg = document.getElementById('cash-error-msg'), customBuyModal = document.getElementById('custom-buy-modal'), customBuyItemName = document.getElementById('custom-buy-item-name'), customBuyInput = document.getElementById('custom-buy-input'), customBuyErrorMsg = document.getElementById('custom-buy-error-msg'), saveCustomBuyBtn = document.getElementById('save-custom-buy-btn'), cancelCustomBuyBtn = document.getElementById('cancel-custom-buy-btn'), resetConfirmModal = document.getElementById('reset-confirm-modal'), confirmResetBtn = document.getElementById('confirm-reset-btn'), cancelResetBtn = document.getElementById('cancel-reset-btn');
 
         let gameState = {};
         let currentCustomBuyIngredient = null;
@@ -183,7 +185,7 @@
             gameState = {
                 day: 1,
                 finances: {
-                    cash: 500,
+                    cash: 5000,
                     dailyRevenue: 0,
                     dailyExpenses: 0,
                 },
@@ -213,6 +215,7 @@
             jsonLogModal.classList.add('hidden');
             editCashModal.classList.add('hidden');
             customBuyModal.classList.add('hidden');
+            resetConfirmModal.classList.add('hidden');
         }
 
         function nextDay() {
@@ -578,6 +581,9 @@
         customerSlider.addEventListener('input', (e) => { gameState.settings.maxCustomers = parseInt(e.target.value, 10); customerCountDisplay.textContent = e.target.value; });
         upgradeOvenBtn.addEventListener('click', () => purchaseUpgrade('oven'));
         marketingBtn.addEventListener('click', () => purchaseUpgrade('marketing'));
+        resetGameBtn.addEventListener('click', () => resetConfirmModal.classList.remove('hidden'));
+        confirmResetBtn.addEventListener('click', () => { initGame(); });
+        cancelResetBtn.addEventListener('click', () => resetConfirmModal.classList.add('hidden'));
 
         // --- INITIALIZE GAME ---
         window.onload = initGame;

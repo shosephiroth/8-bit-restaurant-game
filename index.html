@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8-Bit Restaurant Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #202020;
+            color: #E0E0E0;
+            image-rendering: pixelated;
+        }
+        .game-container {
+            border: 4px solid #505050;
+            background-color: #303030;
+        }
+        .panel {
+            border: 2px solid #505050;
+            background-color: #282828;
+        }
+        .btn {
+            border: 2px solid #505050;
+            background-color: #404040;
+            color: #E0E0E0;
+            text-transform: uppercase;
+            transition: all 0.1s ease-in-out;
+        }
+        .btn:hover {
+            background-color: #606060;
+            color: #FFFFFF;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 0 #505050;
+        }
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .log-message {
+            border-bottom: 1px dashed #404040;
+        }
+        .text-green-pixel { color: #32CD32; }
+        .text-red-pixel { color: #FF4136; }
+        .text-yellow-pixel { color: #FFDC00; }
+        .text-blue-pixel { color: #0074D9; }
+        /* Custom scrollbar for a retro feel */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #282828;
+            border-left: 2px solid #505050;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #505050;
+            border: 2px solid #282828;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #606060;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div id="game-container" class="game-container max-w-7xl mx-auto p-4 rounded-lg shadow-lg">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl md:text-4xl text-yellow-pixel">8-Bit Restaurant</h1>
+            <p class="text-sm text-gray-400">Your journey to culinary stardom!</p>
+        </header>
+
+        <!-- Stats Bar -->
+        <div id="stats-bar" class="panel grid grid-cols-2 md:grid-cols-4 gap-4 p-4 mb-6 rounded-md text-center">
+            <div>
+                <p class="text-sm text-gray-400">Day</p>
+                <p id="day-display" class="text-2xl text-blue-pixel">1</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-400">Cash</p>
+                <p id="cash-display" class="text-2xl text-green-pixel">$500</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-400">Revenue</p>
+                <p id="revenue-display" class="text-2xl text-green-pixel">$0</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-400">Expenses</p>
+                <p id="expenses-display" class="text-2xl text-red-pixel">$0</p>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left Column: Menu & Employees -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Menu Panel -->
+                <div id="menu-panel" class="panel p-4 rounded-md">
+                    <h2 class="text-lg mb-4 text-yellow-pixel">Menu</h2>
+                    <div id="menu-items" class="space-y-3"></div>
+                </div>
+                <!-- Employees Panel -->
+                <div id="employees-panel" class="panel p-4 rounded-md">
+                    <h2 class="text-lg mb-4 text-yellow-pixel">Employees</h2>
+                    <div id="employee-list" class="space-y-2 mb-4"></div>
+                    <button id="hire-btn" class="btn w-full py-2 rounded-md">Hire Cook ($100/day)</button>
+                </div>
+            </div>
+
+            <!-- Middle Column: Stock & Actions -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Stock Panel -->
+                <div id="stock-panel" class="panel p-4 rounded-md">
+                    <h2 class="text-lg mb-4 text-yellow-pixel">Ingredient Stock</h2>
+                    <div id="stock-items" class="space-y-3"></div>
+                </div>
+                 <!-- Actions Panel -->
+                <div id="actions-panel" class="panel p-4 rounded-md">
+                    <h2 class="text-lg mb-4 text-yellow-pixel">Actions</h2>
+                    <button id="next-day-btn" class="btn w-full py-3 rounded-md text-xl">Start Next Day</button>
+                </div>
+            </div>
+
+
+            <!-- Right Column: Game Log -->
+            <div class="lg:col-span-1">
+                <div id="log-panel" class="panel p-4 rounded-md h-full">
+                    <h2 class="text-lg mb-4 text-yellow-pixel">Daily Log</h2>
+                    <div id="game-log" class="h-96 overflow-y-auto pr-2 space-y-2 text-sm">
+                        <!-- Log messages will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for Game Over -->
+    <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div class="panel p-8 rounded-lg text-center max-w-sm">
+            <h2 class="text-3xl text-red-pixel mb-4">Game Over</h2>
+            <p id="game-over-message" class="mb-6">You've run out of money!</p>
+            <button id="restart-btn" class="btn px-8 py-3 rounded-md text-lg">Restart Game</button>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const dayDisplay = document.getElementById('day-display');
+        const cashDisplay = document.getElementById('cash-display');
+        const revenueDisplay = document.getElementById('revenue-display');
+        const expensesDisplay = document.getElementById('expenses-display');
+        const menuItemsContainer = document.getElementById('menu-items');
+        const employeeListContainer = document.getElementById('employee-list');
+        const stockItemsContainer = document.getElementById('stock-items');
+        const gameLogContainer = document.getElementById('game-log');
+        const nextDayBtn = document.getElementById('next-day-btn');
+        const hireBtn = document.getElementById('hire-btn');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const gameOverMessage = document.getElementById('game-over-message');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // --- GAME STATE ---
+        let gameState = {};
+
+        // --- GAME DATA ---
+        const INGREDIENTS = {
+            flour: { name: 'Flour', cost: 2 },
+            sugar: { name: 'Sugar', cost: 3 },
+            eggs: { name: 'Eggs', cost: 4 },
+            cheese: { name: 'Cheese', cost: 5 },
+            tomato: { name: 'Tomato', cost: 3 },
+            dough: { name: 'Dough', cost: 4 },
+        };
+
+        const MENU = {
+            bread: { name: 'Bread', price: 8, ingredients: { flour: 2, eggs: 1 } },
+            cake: { name: 'Cake', price: 15, ingredients: { flour: 3, sugar: 4, eggs: 2 } },
+            pizza: { name: 'Pizza', price: 20, ingredients: { dough: 1, cheese: 2, tomato: 2 } },
+        };
+        
+        const EMPLOYEE_TYPES = {
+            cook: { name: 'Cook', salary: 100, efficiency: 10 }, // Efficiency = max items they can cook per day
+        };
+
+        // --- CORE GAME FUNCTIONS ---
+
+        /**
+         * Initializes the game state to its default values.
+         */
+        function initGame() {
+            gameState = {
+                day: 1,
+                cash: 500,
+                dailyRevenue: 0,
+                employees: [],
+                stock: {
+                    flour: 20,
+                    sugar: 20,
+                    eggs: 15,
+                    cheese: 10,
+                    tomato: 10,
+                    dough: 10,
+                },
+                log: [],
+                isGameOver: false,
+            };
+            logMessage("Welcome to your 8-Bit Restaurant! Buy ingredients and serve customers to make a profit.", 'text-yellow-pixel');
+            updateUI();
+            gameOverModal.classList.add('hidden');
+        }
+
+        /**
+         * Advances the game to the next day, processing sales and expenses.
+         */
+        function nextDay() {
+            if (gameState.isGameOver) return;
+
+            // 1. Reset daily revenue and clear log
+            gameState.dailyRevenue = 0;
+            gameState.log = [];
+            
+            // 2. Pay Employees
+            const totalSalary = gameState.employees.reduce((sum, emp) => sum + emp.salary, 0);
+            gameState.cash -= totalSalary;
+            logMessage(`Paid $${totalSalary} in salaries.`, 'text-red-pixel');
+
+            // 3. Simulate Sales
+            const maxDishes = gameState.employees.reduce((sum, emp) => sum + emp.efficiency, 5); // Base of 5 dishes + employee efficiency
+            const customers = Math.floor(Math.random() * maxDishes) + 1;
+            logMessage(`You had ${customers} customers today.`, 'text-blue-pixel');
+
+            for (let i = 0; i < customers; i++) {
+                sellMenuItem();
+            }
+
+            // 4. Update day and check for game over
+            gameState.day++;
+            logMessage(`Day ${gameState.day-1} summary: Revenue: $${gameState.dailyRevenue}, Expenses: $${totalSalary}.`, 'text-yellow-pixel');
+            
+            if (gameState.cash < 0) {
+                endGame("You've run out of money and fallen into debt!");
+            } else if (gameState.cash > 5000) {
+                endGame("Congratulations! You've built a restaurant empire!");
+            }
+            
+            updateUI();
+        }
+
+        /**
+         * Simulates a single customer buying a random menu item.
+         */
+        function sellMenuItem() {
+            const menuKeys = Object.keys(MENU);
+            const randomItemKey = menuKeys[Math.floor(Math.random() * menuKeys.length)];
+            const item = MENU[randomItemKey];
+
+            // Check if there are enough ingredients
+            let canMake = true;
+            for (const ingredient in item.ingredients) {
+                if (gameState.stock[ingredient] < item.ingredients[ingredient]) {
+                    canMake = false;
+                    break;
+                }
+            }
+
+            if (canMake) {
+                // Deduct ingredients
+                for (const ingredient in item.ingredients) {
+                    gameState.stock[ingredient] -= item.ingredients[ingredient];
+                }
+                // Add cash
+                gameState.cash += item.price;
+                gameState.dailyRevenue += item.price;
+                logMessage(`Sold a ${item.name} for $${item.price}.`, 'text-green-pixel');
+            } else {
+                logMessage(`Couldn't make ${item.name}. Out of ingredients!`, 'text-red-pixel');
+            }
+        }
+        
+        /**
+         * Buys a specified amount of an ingredient.
+         * @param {string} ingredientKey - The key of the ingredient to buy.
+         * @param {number} amount - The amount to purchase.
+         */
+        function buyIngredient(ingredientKey, amount) {
+            if (gameState.isGameOver || amount <= 0) return;
+
+            const ingredient = INGREDIENTS[ingredientKey];
+            const cost = ingredient.cost * amount;
+
+            if (gameState.cash >= cost) {
+                gameState.cash -= cost;
+                gameState.stock[ingredientKey] += amount;
+                logMessage(`Bought ${amount} ${ingredient.name} for $${cost}.`, 'text-blue-pixel');
+                updateUI();
+            } else {
+                logMessage(`Not enough cash to buy ${ingredient.name}.`, 'text-red-pixel');
+                updateUI(); // To show the log message
+            }
+        }
+        
+        /**
+         * Hires a new employee.
+         */
+        function hireEmployee() {
+             if (gameState.isGameOver) return;
+             const cook = EMPLOYEE_TYPES.cook;
+             gameState.employees.push({ ...cook });
+             logMessage(`Hired a ${cook.name} for $${cook.salary}/day.`, 'text-blue-pixel');
+             updateUI();
+        }
+
+        /**
+         * Ends the game and shows the game over modal.
+         * @param {string} message - The message to display.
+         */
+        function endGame(message) {
+            gameState.isGameOver = true;
+            gameOverMessage.textContent = message;
+            gameOverModal.classList.remove('hidden');
+        }
+
+        // --- UI RENDERING FUNCTIONS ---
+
+        /**
+         * Updates the entire UI based on the current game state.
+         */
+        function updateUI() {
+            // Update Stats
+            dayDisplay.textContent = gameState.day;
+            cashDisplay.textContent = `$${gameState.cash}`;
+            revenueDisplay.textContent = `$${gameState.dailyRevenue}`;
+            const totalSalary = gameState.employees.reduce((sum, emp) => sum + emp.salary, 0);
+            expensesDisplay.textContent = `$${totalSalary}`;
+            cashDisplay.className = `text-2xl ${gameState.cash >= 0 ? 'text-green-pixel' : 'text-red-pixel'}`;
+
+
+            // Render Menu
+            menuItemsContainer.innerHTML = '';
+            for (const key in MENU) {
+                const item = MENU[key];
+                const ingredientsText = Object.entries(item.ingredients)
+                    .map(([ingKey, amount]) => `${amount} ${INGREDIENTS[ingKey].name}`)
+                    .join(', ');
+                const menuItemEl = document.createElement('div');
+                menuItemEl.innerHTML = `
+                    <p class="font-bold">${item.name} - <span class="text-green-pixel">$${item.price}</span></p>
+                    <p class="text-xs text-gray-400">${ingredientsText}</p>
+                `;
+                menuItemsContainer.appendChild(menuItemEl);
+            }
+
+            // Render Employees
+            employeeListContainer.innerHTML = '';
+            if (gameState.employees.length === 0) {
+                employeeListContainer.innerHTML = `<p class="text-gray-400">No employees yet.</p>`;
+            } else {
+                gameState.employees.forEach((emp, index) => {
+                    const empEl = document.createElement('div');
+                    empEl.className = 'flex justify-between items-center';
+                    empEl.innerHTML = `
+                        <p>${emp.name} #${index + 1}</p>
+                        <p class="text-red-pixel">-$${emp.salary}/day</p>
+                    `;
+                    employeeListContainer.appendChild(empEl);
+                });
+            }
+
+            // Render Stock
+            stockItemsContainer.innerHTML = '';
+            for (const key in INGREDIENTS) {
+                const ingredient = INGREDIENTS[key];
+                const stockItemEl = document.createElement('div');
+                stockItemEl.className = 'grid grid-cols-3 items-center gap-2';
+                stockItemEl.innerHTML = `
+                    <span class="col-span-1">${ingredient.name}: ${gameState.stock[key]}</span>
+                    <div class="col-span-2 flex gap-1">
+                        <button class="btn flex-1 py-1 text-xs rounded" onclick="buyIngredient('${key}', 5)">+5 ($${ingredient.cost * 5})</button>
+                        <button class="btn flex-1 py-1 text-xs rounded" onclick="buyIngredient('${key}', 10)">+10 ($${ingredient.cost * 10})</button>
+                    </div>
+                `;
+                stockItemsContainer.appendChild(stockItemEl);
+            }
+            
+            // Render Log
+            renderLog();
+        }
+
+        /**
+         * Adds a message to the game log and keeps it at a reasonable size.
+         * @param {string} message - The message text.
+         * @param {string} colorClass - The Tailwind CSS color class for the message.
+         */
+        function logMessage(message, colorClass = 'text-gray-300') {
+            gameState.log.unshift({ text: message, color: colorClass });
+            if (gameState.log.length > 50) {
+                gameState.log.pop();
+            }
+            if(gameLogContainer.parentElement.offsetParent) { // only render if visible
+               renderLog();
+            }
+        }
+        
+        /**
+         * Renders the current log messages to the screen.
+         */
+        function renderLog() {
+            gameLogContainer.innerHTML = gameState.log.map(msg => 
+                `<p class="log-message pb-1 ${msg.color}">${msg.text}</p>`
+            ).join('');
+        }
+
+
+        // --- EVENT LISTENERS ---
+        nextDayBtn.addEventListener('click', nextDay);
+        hireBtn.addEventListener('click', hireEmployee);
+        restartBtn.addEventListener('click', initGame);
+
+        // --- INITIALIZE GAME ---
+        window.onload = initGame;
+    </script>
+
+</body>
+</html>

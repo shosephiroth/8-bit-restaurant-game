@@ -133,7 +133,13 @@
         const INGREDIENTS = { flour: { name: 'Flour', cost: 2 }, sugar: { name: 'Sugar', cost: 3 }, eggs: { name: 'Eggs', cost: 4 }, cheese: { name: 'Cheese', cost: 5 }, tomato: { name: 'Tomato', cost: 3 }, dough: { name: 'Dough', cost: 4 }, potato: { name: 'Potato', cost: 1 }, beef: { name: 'Beef', cost: 8 }, bun: { name: 'Bun', cost: 2 }, lettuce: { name: 'Lettuce', cost: 2 }, milkshake_mix: { name: 'Milkshake Mix', cost: 6 }, fancy_cheese: { name: 'Fancy Cheese', cost: 9}, bacon: { name: 'Bacon', cost: 7} };
         const MENU = { bread: { name: 'Bread', price: 8, ingredients: { flour: 2, eggs: 1 } }, cake: { name: 'Cake', price: 15, ingredients: { flour: 3, sugar: 4, eggs: 2 } }, pizza: { name: 'Pizza', price: 20, ingredients: { dough: 1, cheese: 2, tomato: 2 } }, fries: { name: 'Fries', price: 7, ingredients: { potato: 3 } }, burger: { name: 'Burger', price: 25, ingredients: { beef: 1, bun: 1, lettuce: 1 } }, milkshake: { name: 'Milkshake', price: 12, ingredients: { milkshake_mix: 1, sugar: 1 } }, deluxe_burger: { name: 'Deluxe Burger', price: 35, ingredients: { beef: 1, bun: 1, fancy_cheese: 1, bacon: 1 } }, gourmet_pizza: { name: 'Gourmet Pizza', price: 45, ingredients: { dough: 1, fancy_cheese: 2, bacon: 2, tomato: 1 } } };
         const EMPLOYEE_TYPES = { cook: { name: 'Cook', salary: 100, effect: { type: 'efficiency', value: 10 } }, dishwasher: { name: 'Dishwasher', salary: 60, effect: { type: 'capacity', value: 5 } }, cashier: { name: 'Cashier', salary: 70, effect: { type: 'bonus', value: 0.05 } }, driver: { name: 'Delivery Driver', salary: 80, effect: { type: 'delivery', value: 3 } } };
-        const UNLOCKS = [ { day: 3, ingredients: ['potato', 'beef', 'bun'], menu: ['fries', 'burger'], message: "New items available: Fries and Burgers!" }, { day: 5, ingredients: ['lettuce', 'milkshake_mix'], menu: ['milkshake'], message: "You can now sell Milkshakes!" }, { day: 10, ingredients: ['fancy_cheese', 'bacon'], menu: [], message: "Premium ingredients unlocked!" }, { day: 14, menu: ['deluxe_burger'], message: "A new creation: The Deluxe Burger!" }, { day: 30, menu: ['gourmet_pizza'], message: "Master Chef! You've unlocked the Gourmet Pizza!" } ];
+        const UNLOCKS = [ 
+            { day: 3, ingredients: ['potato', 'beef', 'bun', 'lettuce'], menu: ['fries', 'burger'], message: "New items available: Fries and Burgers!" }, 
+            { day: 5, ingredients: ['milkshake_mix'], menu: ['milkshake'], message: "You can now sell Milkshakes!" }, 
+            { day: 10, ingredients: ['fancy_cheese', 'bacon'], menu: [], message: "Premium ingredients unlocked!" }, 
+            { day: 14, menu: ['deluxe_burger'], message: "A new creation: The Deluxe Burger!" }, 
+            { day: 30, menu: ['gourmet_pizza'], message: "Master Chef! You've unlocked the Gourmet Pizza!" } 
+        ];
         const OPEN_HOUR = 8, CLOSE_HOUR = 22;
 
         // --- TIME & DATE HELPERS ---

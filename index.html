@@ -108,7 +108,16 @@
             </div>
             <div class="lg:col-span-1 space-y-6">
                 <div id="stock-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Ingredient Stock</h2><div id="stock-items" class="space-y-3"></div></div>
-                <div id="actions-panel" class="panel p-4 rounded-md space-y-3">
+                 <div id="settings-panel" class="panel p-4 rounded-md space-y-3">
+                    <h2 class="text-lg mb-2 text-yellow-pixel">Restaurant Settings</h2>
+                    <div>
+                        <label for="customer-slider" class="text-sm text-gray-400">Max Customers Next Day: <span id="customer-count-display">10</span></label>
+                        <input type="range" id="customer-slider" min="5" max="50" value="10" class="w-full">
+                    </div>
+                </div>
+            </div>
+            <div class="lg:col-span-1 space-y-6">
+                 <div id="actions-panel" class="panel p-4 rounded-md space-y-3">
                     <h2 class="text-lg mb-2 text-yellow-pixel">Actions</h2>
                     <button id="next-day-btn" class="btn w-full py-3 rounded-md text-xl">Start Next Day</button>
                     <button id="timezone-btn" class="btn w-full py-2 rounded-md">Toggle Timezone</button>
@@ -117,8 +126,8 @@
                     <button id="import-btn" class="btn w-full py-2 rounded-md">Import Save</button>
                     <input type="file" id="import-file-input" class="hidden" accept=".json">
                 </div>
+                <div id="log-panel" class="panel p-4 rounded-md h-full"><h2 class="text-lg mb-4 text-yellow-pixel">Daily Log</h2><div id="game-log" class="h-96 overflow-y-auto pr-2 space-y-2 text-sm"></div></div>
             </div>
-            <div class="lg:col-span-1"><div id="log-panel" class="panel p-4 rounded-md h-full"><h2 class="text-lg mb-4 text-yellow-pixel">Daily Log</h2><div id="game-log" class="h-96 overflow-y-auto pr-2 space-y-2 text-sm"></div></div></div>
         </div>
     </div>
     
@@ -130,7 +139,7 @@
 
     <script>
         // DOM Elements
-        const dayDisplay = document.getElementById('day-display'), timezoneDisplay = document.getElementById('timezone-display'), cashDisplay = document.getElementById('cash-display'), editCashBtn = document.getElementById('edit-cash-btn'), revenueDisplay = document.getElementById('revenue-display'), expensesDisplay = document.getElementById('expenses-display'), menuItemsContainer = document.getElementById('menu-items'), employeeListContainer = document.getElementById('employee-list'), hireButtonsContainer = document.getElementById('hire-buttons'), stockItemsContainer = document.getElementById('stock-items'), gameLogContainer = document.getElementById('game-log'), nextDayBtn = document.getElementById('next-day-btn'), timezoneBtn = document.getElementById('timezone-btn'), jsonLogBtn = document.getElementById('json-log-btn'), exportBtn = document.getElementById('export-btn'), importBtn = document.getElementById('import-btn'), importFileInput = document.getElementById('import-file-input');
+        const dayDisplay = document.getElementById('day-display'), timezoneDisplay = document.getElementById('timezone-display'), cashDisplay = document.getElementById('cash-display'), editCashBtn = document.getElementById('edit-cash-btn'), revenueDisplay = document.getElementById('revenue-display'), expensesDisplay = document.getElementById('expenses-display'), menuItemsContainer = document.getElementById('menu-items'), employeeListContainer = document.getElementById('employee-list'), hireButtonsContainer = document.getElementById('hire-buttons'), stockItemsContainer = document.getElementById('stock-items'), gameLogContainer = document.getElementById('game-log'), nextDayBtn = document.getElementById('next-day-btn'), timezoneBtn = document.getElementById('timezone-btn'), jsonLogBtn = document.getElementById('json-log-btn'), exportBtn = document.getElementById('export-btn'), importBtn = document.getElementById('import-btn'), importFileInput = document.getElementById('import-file-input'), customerSlider = document.getElementById('customer-slider'), customerCountDisplay = document.getElementById('customer-count-display');
         // Modals
         const gameOverModal = document.getElementById('game-over-modal'), gameOverMessage = document.getElementById('game-over-message'), restartBtn = document.getElementById('restart-btn'), jsonLogModal = document.getElementById('json-log-modal'), jsonLogTextarea = document.getElementById('json-log-textarea'), copyLogBtn = document.getElementById('copy-log-btn'), closeLogBtn = document.getElementById('close-log-btn'), editCashModal = document.getElementById('edit-cash-modal'), cashInput = document.getElementById('cash-input'), saveCashBtn = document.getElementById('save-cash-btn'), cancelCashBtn = document.getElementById('cancel-cash-btn'), cashErrorMsg = document.getElementById('cash-error-msg'), customBuyModal = document.getElementById('custom-buy-modal'), customBuyItemName = document.getElementById('custom-buy-item-name'), customBuyInput = document.getElementById('custom-buy-input'), customBuyErrorMsg = document.getElementById('custom-buy-error-msg'), saveCustomBuyBtn = document.getElementById('save-custom-buy-btn'), cancelCustomBuyBtn = document.getElementById('cancel-custom-buy-btn');
 
@@ -155,6 +164,7 @@
                 stock: { flour: 20, sugar: 20, eggs: 15, cheese: 10, tomato: 10, dough: 10, potato: 0, beef: 0, bun: 0, lettuce: 0, milkshake_mix: 0, fancy_cheese: 0, bacon: 0 },
                 unlocks: { ingredients: ['flour', 'sugar', 'eggs', 'cheese', 'tomato', 'dough'], menu: ['bread', 'cake', 'pizza'] },
                 daily: { revenue: 0, expenses: 0 },
+                settings: { maxCustomers: 10 },
                 history: {},
                 meta: { isGameOver: false, gameStartDate: new Date().toISOString(), timeZone: 'local' }
             };
@@ -177,14 +187,16 @@
                 logMessage({ type: 'EXPENSE', message: `Paid $${totalSalary} in salaries.`, color: 'text-red-pixel', details: { amount: totalSalary, reason: 'Salaries', cashAfter: gameState.cash } }, getCurrentGameDate(OPEN_HOUR));
             }
 
-            const cooks = gameState.employees.filter(e => e.type === 'cook'), cashiers = gameState.employees.filter(e => e.type === 'cashier'), dishwashers = gameState.employees.filter(e => e.type === 'dishwasher'), drivers = gameState.employees.filter(e => e.type === 'driver');
-            const cookEfficiency = cooks.reduce((sum, e) => sum + e.effect.value, 0), capacityBonus = dishwashers.reduce((sum, e) => sum + e.effect.value, 0);
-            const totalPotentialCustomers = 5 + capacityBonus, customersToday = Math.floor(Math.random() * (totalPotentialCustomers + 1));
+            const cooks = gameState.employees.filter(e => e.type === 'cook'), cashiers = gameState.employees.filter(e => e.type === 'cashier'), drivers = gameState.employees.filter(e => e.type === 'driver');
+            const cookEfficiency = cooks.reduce((sum, e) => sum + e.effect.value, 0);
+            const totalPotentialCustomers = gameState.settings.maxCustomers;
+            const customersToday = Math.floor(Math.random() * (totalPotentialCustomers + 1));
             let itemsCooked = 0;
 
             if (cooks.length === 0) logMessage({ type: 'SYSTEM', message: `No cooks on staff! No food can be prepared.`, color: 'text-red-pixel' }, getCurrentGameDate(12));
             else if (cashiers.length === 0) logMessage({ type: 'SYSTEM', message: `${customersToday} customers came, but with no cashier, no sales could be made.`, color: 'text-red-pixel' }, getCurrentGameDate(12));
             else {
+                logMessage({type: 'SYSTEM', message: `${customersToday} customers visited today.`, color: 'text-blue-pixel'}, getCurrentGameDate(8));
                 for (let i = 0; i < customersToday && itemsCooked < cookEfficiency; i++) {
                     if (sellMenuItem(getCurrentGameDate(OPEN_HOUR + Math.floor(Math.random() * (CLOSE_HOUR - OPEN_HOUR)), Math.floor(Math.random() * 60)), false)) itemsCooked++;
                 }
@@ -274,6 +286,8 @@
             revenueDisplay.textContent = `$${gameState.daily.revenue}`;
             expensesDisplay.textContent = `$${gameState.daily.expenses}`;
             cashDisplay.className = `text-2xl ${gameState.cash >= 0 ? 'text-green-pixel' : 'text-red-pixel'}`;
+            customerSlider.value = gameState.settings.maxCustomers;
+            customerCountDisplay.textContent = gameState.settings.maxCustomers;
 
             menuItemsContainer.innerHTML = gameState.unlocks.menu.map(key => {
                 const item = MASTER_MENU[key];
@@ -345,23 +359,18 @@
             reader.onload = function(e) {
                 try {
                     const importedState = JSON.parse(e.target.result);
-                    // Basic validation
                     if (importedState.day && importedState.cash !== undefined && importedState.stock) {
                         gameState = importedState;
-                        // Convert date strings back to Date objects if needed
                         gameState.meta.gameStartDate = new Date(gameState.meta.gameStartDate);
                         logMessage({type: 'SYSTEM', message: `Game state for day ${gameState.day} imported successfully!`, color: 'text-purple-pixel'});
                         updateUI();
-                    } else {
-                        throw new Error('Invalid save file structure.');
-                    }
+                    } else { throw new Error('Invalid save file structure.'); }
                 } catch (error) {
                     console.error('Failed to import save file:', error);
                     alert('Error: Could not load the save file. It might be corrupted or in the wrong format.');
                 }
             };
             reader.readAsText(file);
-            // Reset file input to allow importing the same file again
             event.target.value = '';
         }
 
@@ -375,6 +384,10 @@
         exportBtn.addEventListener('click', exportGameState);
         importBtn.addEventListener('click', () => importFileInput.click());
         importFileInput.addEventListener('change', importGameState);
+        customerSlider.addEventListener('input', (e) => {
+            gameState.settings.maxCustomers = parseInt(e.target.value, 10);
+            customerCountDisplay.textContent = e.target.value;
+        });
 
         // --- INITIALIZE GAME ---
         window.onload = initGame;

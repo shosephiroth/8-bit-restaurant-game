@@ -104,6 +104,16 @@
                 <p id="expenses-display" class="text-2xl text-red-pixel">$0</p>
             </div>
         </div>
+        
+        <!-- Summary Panel -->
+        <div id="summary-panel" class="panel p-4 mb-6 rounded-md text-xs">
+            <h3 class="text-sm mb-2 text-yellow-pixel">Previous Day Summary</h3>
+            <div id="summary-content" class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <p>Customers Served: <span id="summary-customers" class="text-blue-pixel">0</span></p>
+                <p>Deliveries: <span id="summary-deliveries" class="text-blue-pixel">0</span></p>
+                <p>AP Used: <span id="summary-ap" class="text-blue-pixel">0</span></p>
+            </div>
+        </div>
 
         <!-- Main Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -163,7 +173,7 @@
 
     <script>
         // DOM Elements
-        const dayDisplay = document.getElementById('day-display'), timezoneDisplay = document.getElementById('timezone-display'), cashDisplay = document.getElementById('cash-display'), editCashBtn = document.getElementById('edit-cash-btn'), revenueDisplay = document.getElementById('revenue-display'), expensesDisplay = document.getElementById('expenses-display'), menuItemsContainer = document.getElementById('menu-items'), employeeControlsContainer = document.getElementById('employee-controls'), stockItemsContainer = document.getElementById('stock-items'), gameLogContainer = document.getElementById('game-log'), nextDayBtn = document.getElementById('next-day-btn'), timezoneBtn = document.getElementById('timezone-btn'), jsonLogBtn = document.getElementById('json-log-btn'), exportBtn = document.getElementById('export-btn'), importBtn = document.getElementById('import-btn'), importFileInput = document.getElementById('import-file-input'), customerSlider = document.getElementById('customer-slider'), customerCountDisplay = document.getElementById('customer-count-display'), upgradeOvenBtn = document.getElementById('upgrade-oven-btn'), marketingBtn = document.getElementById('marketing-btn'), resetGameBtn = document.getElementById('reset-game-btn'), apDisplay = document.getElementById('ap-display');
+        const dayDisplay = document.getElementById('day-display'), timezoneDisplay = document.getElementById('timezone-display'), cashDisplay = document.getElementById('cash-display'), editCashBtn = document.getElementById('edit-cash-btn'), revenueDisplay = document.getElementById('revenue-display'), expensesDisplay = document.getElementById('expenses-display'), menuItemsContainer = document.getElementById('menu-items'), employeeControlsContainer = document.getElementById('employee-controls'), stockItemsContainer = document.getElementById('stock-items'), gameLogContainer = document.getElementById('game-log'), nextDayBtn = document.getElementById('next-day-btn'), timezoneBtn = document.getElementById('timezone-btn'), jsonLogBtn = document.getElementById('json-log-btn'), exportBtn = document.getElementById('export-btn'), importBtn = document.getElementById('import-btn'), importFileInput = document.getElementById('import-file-input'), customerSlider = document.getElementById('customer-slider'), customerCountDisplay = document.getElementById('customer-count-display'), upgradeOvenBtn = document.getElementById('upgrade-oven-btn'), marketingBtn = document.getElementById('marketing-btn'), resetGameBtn = document.getElementById('reset-game-btn'), apDisplay = document.getElementById('ap-display'), summaryCustomers = document.getElementById('summary-customers'), summaryDeliveries = document.getElementById('summary-deliveries'), summaryAP = document.getElementById('summary-ap');
         // Modals
         const gameOverModal = document.getElementById('game-over-modal'), gameOverMessage = document.getElementById('game-over-message'), restartBtn = document.getElementById('restart-btn'), jsonLogModal = document.getElementById('json-log-modal'), jsonLogTextarea = document.getElementById('json-log-textarea'), copyLogBtn = document.getElementById('copy-log-btn'), closeLogBtn = document.getElementById('close-log-btn'), editCashModal = document.getElementById('edit-cash-modal'), cashInput = document.getElementById('cash-input'), saveCashBtn = document.getElementById('save-cash-btn'), cancelCashBtn = document.getElementById('cancel-cash-btn'), cashErrorMsg = document.getElementById('cash-error-msg'), customBuyModal = document.getElementById('custom-buy-modal'), customBuyItemName = document.getElementById('custom-buy-item-name'), customBuyInput = document.getElementById('custom-buy-input'), customBuyErrorMsg = document.getElementById('custom-buy-error-msg'), saveCustomBuyBtn = document.getElementById('save-custom-buy-btn'), cancelCustomBuyBtn = document.getElementById('cancel-custom-buy-btn'), resetConfirmModal = document.getElementById('reset-confirm-modal'), confirmResetBtn = document.getElementById('confirm-reset-btn'), cancelResetBtn = document.getElementById('cancel-reset-btn');
 
@@ -202,6 +212,8 @@
                 settings: { maxCustomers: 10 },
                 upgrades: { oven: false, marketing_active_days: 0 },
                 events: { critic_visit_today: false, critic_sales_target: 10 },
+                daily: { successfulSales: 0, deliveries: 0 },
+                lastDaySummary: { apUsed: 0, deliveries: 0, customersServed: 0 },
                 history: {},
                 meta: { isGameOver: false, gameStartDate: new Date().toISOString(), timeZone: 'local' }
             };
@@ -217,8 +229,14 @@
 
         function nextDay() {
             if (gameState.meta.isGameOver) return;
+            
+            const startingAP = calculateActionPoints();
+            const totalAPAtStart = Object.values(startingAP).reduce((a, b) => a + b, 0);
+
             gameState.finances.dailyRevenue = 0;
             gameState.finances.dailyExpenses = 0;
+            gameState.daily.successfulSales = 0;
+            gameState.daily.deliveries = 0;
             
             const totalSalary = gameState.staff.employees.reduce((sum, emp) => sum + emp.salary, 0);
             if (totalSalary > 0) {
@@ -238,19 +256,15 @@
             }
 
             const customersToday = Math.floor(Math.random() * (totalPotentialCustomers + 1));
-            let successfulSalesToday = 0;
-
             logMessage({type: 'SYSTEM', message: `${customersToday} customers are expected today.`, color: 'text-blue-pixel'}, getCurrentGameDate(GAME_DATA.OPEN_HOUR));
 
             for (let i = 0; i < customersToday; i++) {
-                const isDelivery = Math.random() < 0.2; // 20% chance of being a delivery
-                if (sellMenuItem(getCurrentGameDate(GAME_DATA.OPEN_HOUR + Math.floor(Math.random() * (GAME_DATA.CLOSE_HOUR - GAME_DATA.OPEN_HOUR)), Math.floor(Math.random() * 60)), isDelivery, ap)) {
-                    if (!isDelivery) successfulSalesToday++;
-                }
+                const isDelivery = Math.random() < 0.2;
+                sellMenuItem(getCurrentGameDate(GAME_DATA.OPEN_HOUR + Math.floor(Math.random() * (GAME_DATA.CLOSE_HOUR - GAME_DATA.OPEN_HOUR)), Math.floor(Math.random() * 60)), isDelivery, ap);
             }
 
             if (gameState.events.critic_visit_today) {
-                if (successfulSalesToday >= gameState.events.critic_sales_target) {
+                if (gameState.daily.successfulSales >= gameState.events.critic_sales_target) {
                     const randomMenuItemKey = gameState.unlocks.menu[Math.floor(Math.random() * gameState.unlocks.menu.length)];
                     GAME_DATA.MENU[randomMenuItemKey].popularity += 2;
                     logMessage({ type: 'EVENT', message: `Success! The food critic was impressed. ${GAME_DATA.MENU[randomMenuItemKey].name} is now more popular!`, color: 'text-purple-pixel' });
@@ -258,11 +272,18 @@
                     logMessage({ type: 'EVENT', message: `The food critic left unimpressed.`, color: 'text-red-pixel' });
                 }
             }
+            
+            const totalAPAtEnd = Object.values(ap).reduce((a, b) => a + b, 0);
+            const apUsed = totalAPAtStart - totalAPAtEnd;
 
-            // XP Gain and Level Up
+            gameState.lastDaySummary = {
+                apUsed: apUsed,
+                deliveries: gameState.daily.deliveries,
+                customersServed: gameState.daily.successfulSales
+            };
+
             gameState.staff.employees.forEach(emp => {
                 emp.xp += 10;
-                const currentLevelData = GAME_DATA.EMPLOYEE_TYPES[emp.type].levels[emp.level];
                 const nextLevelData = GAME_DATA.EMPLOYEE_TYPES[emp.type].levels[emp.level + 1];
                 if (nextLevelData && emp.xp >= nextLevelData.xp_needed) {
                     emp.level++;
@@ -270,7 +291,7 @@
                 }
             });
 
-            logMessage({ type: 'SYSTEM', message: `Day ${gameState.day} summary: Revenue: $${gameState.finances.dailyRevenue}, Expenses: $${gameState.finances.dailyExpenses}.`, color: 'text-yellow-pixel' }, getCurrentGameDate(GAME_DATA.CLOSE_HOUR));
+            logMessage({ type: 'SYSTEM', message: `Day ${gameState.day} summary: Revenue: $${gameState.finances.dailyRevenue}, Expenses: $${gameState.finances.dailyExpenses}, AP Used: ${apUsed}.`, color: 'text-yellow-pixel' }, getCurrentGameDate(GAME_DATA.CLOSE_HOUR));
             
             gameState.day++;
             gameState.history[gameState.day] = [];
@@ -283,8 +304,8 @@
         }
         
         function handleDailyEvents() {
-            gameState.events.critic_visit_today = false; // Reset
-            if (gameState.day > 5 && Math.random() < 0.2) { // 20% chance
+            gameState.events.critic_visit_today = false;
+            if (gameState.day > 5 && Math.random() < 0.2) {
                 gameState.events.critic_visit_today = true;
                 logMessage({ type: 'EVENT', message: `A food critic is visiting today! Serve ${gameState.events.critic_sales_target} customers to impress them!`, color: 'text-yellow-pixel' }, getCurrentGameDate(GAME_DATA.OPEN_HOUR, 1));
             }
@@ -341,6 +362,12 @@
             let salePrice = item.price;
             gameState.finances.cash += salePrice;
             gameState.finances.dailyRevenue += salePrice;
+            
+            if (isDelivery) {
+                gameState.daily.deliveries++;
+            } else {
+                gameState.daily.successfulSales++;
+            }
 
             logMessage({ type: 'SALE', message: `${isDelivery ? '[DELIVERY] ' : ''}Sold a ${item.name} for $${item.price}.`, color: 'text-green-pixel', details: { item: item.name, price: item.price, cashAfter: gameState.finances.cash, ingredientsUsed: ingredientsCopy, stockBefore, stockAfter: { ...gameState.inventory.stock } } }, date);
             return true;
@@ -490,6 +517,11 @@
             cashDisplay.className = `text-2xl ${gameState.finances.cash >= 0 ? 'text-green-pixel' : 'text-red-pixel'}`;
             customerSlider.value = gameState.settings.maxCustomers;
             customerCountDisplay.textContent = gameState.settings.maxCustomers;
+
+            // Update Summary Panel
+            summaryCustomers.textContent = gameState.lastDaySummary.customersServed;
+            summaryDeliveries.textContent = gameState.lastDaySummary.deliveries;
+            summaryAP.textContent = gameState.lastDaySummary.apUsed;
 
             upgradeOvenBtn.disabled = gameState.upgrades.oven;
             if(gameState.upgrades.oven) upgradeOvenBtn.textContent = 'Oven Purchased';

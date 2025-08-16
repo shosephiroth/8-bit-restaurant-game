@@ -175,11 +175,12 @@
             INGREDIENTS: { flour: { name: 'Flour', cost: 2 }, sugar: { name: 'Sugar', cost: 3 }, eggs: { name: 'Eggs', cost: 4 }, cheese: { name: 'Cheese', cost: 5 }, tomato: { name: 'Tomato', cost: 3 }, dough: { name: 'Dough', cost: 4 }, potato: { name: 'Potato', cost: 1 }, beef: { name: 'Beef', cost: 8 }, bun: { name: 'Bun', cost: 2 }, lettuce: { name: 'Lettuce', cost: 2 }, milkshake_mix: { name: 'Milkshake Mix', cost: 6 }, fancy_cheese: { name: 'Fancy Cheese', cost: 9}, bacon: { name: 'Bacon', cost: 7} },
             MENU: { bread: { name: 'Bread', price: 12, ingredients: { flour: 2, eggs: 1 }, popularity: 8 }, cake: { name: 'Cake', price: 22, ingredients: { flour: 3, sugar: 4, eggs: 2 }, popularity: 6 }, pizza: { name: 'Pizza', price: 28, ingredients: { dough: 1, cheese: 2, tomato: 2 }, popularity: 10 }, fries: { name: 'Fries', price: 10, ingredients: { potato: 3 }, popularity: 9 }, burger: { name: 'Burger', price: 35, ingredients: { beef: 1, bun: 1, lettuce: 1 }, popularity: 9 }, milkshake: { name: 'Milkshake', price: 18, ingredients: { milkshake_mix: 1, sugar: 1 }, popularity: 7 }, deluxe_burger: { name: 'Deluxe Burger', price: 48, ingredients: { beef: 1, bun: 1, fancy_cheese: 1, bacon: 1 }, popularity: 5 }, gourmet_pizza: { name: 'Gourmet Pizza', price: 65, ingredients: { dough: 1, fancy_cheese: 2, bacon: 2, tomato: 1 }, popularity: 4 } },
             EMPLOYEE_TYPES: { 
-                manager: { name: 'Manager', salary: 250, ap: { general: 4 } },
-                asst_manager: { name: 'Asst. Manager', salary: 180, ap: { general: 3 } },
-                cook: { name: 'Cook', salary: 120, ap: { cooking: 6 } },
-                cashier: { name: 'Cashier', salary: 70, ap: { service: 6 } },
-                driver: { name: 'Delivery Driver', salary: 80, ap: { delivery: 6 } }
+                manager: { name: 'Manager', salary: 250, levels: { 1: { ap: { general: 25 }, xp_needed: 0 }, 2: { ap: { general: 30 }, xp_needed: 100 }, 3: { ap: { general: 50 }, xp_needed: 300 } } },
+                asst_manager: { name: 'Asst. Manager', salary: 180, levels: { 1: { ap: { general: 10 }, xp_needed: 0 }, 2: { ap: { general: 15 }, xp_needed: 100 }, 3: { ap: { general: 20 }, xp_needed: 300 } } },
+                cook: { name: 'Cook', salary: 120, levels: { 1: { ap: { cooking: 10 }, xp_needed: 0 }, 2: { ap: { cooking: 15 }, xp_needed: 100 }, 3: { ap: { cooking: 20 }, xp_needed: 300 } } },
+                cashier: { name: 'Cashier', salary: 70, levels: { 1: { ap: { service: 10 }, xp_needed: 0 }, 2: { ap: { service: 15 }, xp_needed: 100 }, 3: { ap: { service: 20 }, xp_needed: 300 } } },
+                driver: { name: 'Delivery Driver', salary: 80, levels: { 1: { ap: { delivery: 10 }, xp_needed: 0 }, 2: { ap: { delivery: 15 }, xp_needed: 100 }, 3: { ap: { delivery: 20 }, xp_needed: 300 } } },
+                dishwasher: { name: 'Dishwasher', salary: 60, levels: { 1: { ap: { service: 5 }, xp_needed: 0 }, 2: { ap: { service: 8 }, xp_needed: 100 }, 3: { ap: { service: 12 }, xp_needed: 300 } } }
             },
             UNLOCKS: [ { day: 3, ingredients: ['potato', 'beef', 'bun', 'lettuce'], menu: ['fries', 'burger'] }, { day: 5, ingredients: ['milkshake_mix'], menu: ['milkshake'] }, { day: 10, ingredients: ['fancy_cheese', 'bacon'], menu: [] }, { day: 14, menu: ['deluxe_burger'] }, { day: 30, menu: ['gourmet_pizza'] } ],
             OPEN_HOUR: 8,
@@ -257,6 +258,17 @@
                     logMessage({ type: 'EVENT', message: `The food critic left unimpressed.`, color: 'text-red-pixel' });
                 }
             }
+
+            // XP Gain and Level Up
+            gameState.staff.employees.forEach(emp => {
+                emp.xp += 10;
+                const currentLevelData = GAME_DATA.EMPLOYEE_TYPES[emp.type].levels[emp.level];
+                const nextLevelData = GAME_DATA.EMPLOYEE_TYPES[emp.type].levels[emp.level + 1];
+                if (nextLevelData && emp.xp >= nextLevelData.xp_needed) {
+                    emp.level++;
+                    logMessage({ type: 'SYSTEM', message: `${emp.name} has leveled up to level ${emp.level}!`, color: 'text-purple-pixel'});
+                }
+            });
 
             logMessage({ type: 'SYSTEM', message: `Day ${gameState.day} summary: Revenue: $${gameState.finances.dailyRevenue}, Expenses: $${gameState.finances.dailyExpenses}.`, color: 'text-yellow-pixel' }, getCurrentGameDate(GAME_DATA.CLOSE_HOUR));
             
@@ -337,8 +349,9 @@
         function calculateActionPoints() {
             const ap = { cooking: 0, service: 0, delivery: 0, general: 0 };
             gameState.staff.employees.forEach(emp => {
-                for (const key in emp.ap) {
-                    ap[key] += emp.ap[key];
+                const levelData = GAME_DATA.EMPLOYEE_TYPES[emp.type].levels[emp.level];
+                for (const key in levelData.ap) {
+                    ap[key] += levelData.ap[key];
                 }
             });
             return ap;
@@ -435,7 +448,7 @@
         function addEmployee(typeKey) {
              if (gameState.meta.isGameOver || !GAME_DATA.EMPLOYEE_TYPES[typeKey]) return;
              const empTmpl = GAME_DATA.EMPLOYEE_TYPES[typeKey];
-             const newEmployee = { id: Date.now() + Math.random(), type: typeKey, name: empTmpl.name, salary: empTmpl.salary, ap: empTmpl.ap };
+             const newEmployee = { id: Date.now() + Math.random(), type: typeKey, name: empTmpl.name, salary: empTmpl.salary, level: 1, xp: 0 };
              gameState.staff.employees.push(newEmployee);
              logMessage({ type: 'HIRE', message: `Hired a ${empTmpl.name} for $${empTmpl.salary}/day.`, color: 'text-blue-pixel', details: { employee: newEmployee } });
              updateUI();

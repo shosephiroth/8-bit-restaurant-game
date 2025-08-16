@@ -110,6 +110,10 @@
             <div class="lg:col-span-1 space-y-6">
                 <div id="menu-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Menu</h2><div id="menu-items" class="space-y-3"></div></div>
                 <div id="employees-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Manage Employees</h2><div id="employee-controls" class="space-y-2"></div></div>
+                 <div id="capacity-panel" class="panel p-4 rounded-md space-y-2">
+                    <h2 class="text-lg mb-2 text-yellow-pixel">Daily Capacity</h2>
+                    <div id="ap-display" class="text-xs"></div>
+                </div>
             </div>
             <div class="lg:col-span-1 space-y-6">
                 <div id="stock-panel" class="panel p-4 rounded-md">
@@ -159,7 +163,7 @@
 
     <script>
         // DOM Elements
-        const dayDisplay = document.getElementById('day-display'), timezoneDisplay = document.getElementById('timezone-display'), cashDisplay = document.getElementById('cash-display'), editCashBtn = document.getElementById('edit-cash-btn'), revenueDisplay = document.getElementById('revenue-display'), expensesDisplay = document.getElementById('expenses-display'), menuItemsContainer = document.getElementById('menu-items'), employeeControlsContainer = document.getElementById('employee-controls'), stockItemsContainer = document.getElementById('stock-items'), gameLogContainer = document.getElementById('game-log'), nextDayBtn = document.getElementById('next-day-btn'), timezoneBtn = document.getElementById('timezone-btn'), jsonLogBtn = document.getElementById('json-log-btn'), exportBtn = document.getElementById('export-btn'), importBtn = document.getElementById('import-btn'), importFileInput = document.getElementById('import-file-input'), customerSlider = document.getElementById('customer-slider'), customerCountDisplay = document.getElementById('customer-count-display'), upgradeOvenBtn = document.getElementById('upgrade-oven-btn'), marketingBtn = document.getElementById('marketing-btn'), resetGameBtn = document.getElementById('reset-game-btn');
+        const dayDisplay = document.getElementById('day-display'), timezoneDisplay = document.getElementById('timezone-display'), cashDisplay = document.getElementById('cash-display'), editCashBtn = document.getElementById('edit-cash-btn'), revenueDisplay = document.getElementById('revenue-display'), expensesDisplay = document.getElementById('expenses-display'), menuItemsContainer = document.getElementById('menu-items'), employeeControlsContainer = document.getElementById('employee-controls'), stockItemsContainer = document.getElementById('stock-items'), gameLogContainer = document.getElementById('game-log'), nextDayBtn = document.getElementById('next-day-btn'), timezoneBtn = document.getElementById('timezone-btn'), jsonLogBtn = document.getElementById('json-log-btn'), exportBtn = document.getElementById('export-btn'), importBtn = document.getElementById('import-btn'), importFileInput = document.getElementById('import-file-input'), customerSlider = document.getElementById('customer-slider'), customerCountDisplay = document.getElementById('customer-count-display'), upgradeOvenBtn = document.getElementById('upgrade-oven-btn'), marketingBtn = document.getElementById('marketing-btn'), resetGameBtn = document.getElementById('reset-game-btn'), apDisplay = document.getElementById('ap-display');
         // Modals
         const gameOverModal = document.getElementById('game-over-modal'), gameOverMessage = document.getElementById('game-over-message'), restartBtn = document.getElementById('restart-btn'), jsonLogModal = document.getElementById('json-log-modal'), jsonLogTextarea = document.getElementById('json-log-textarea'), copyLogBtn = document.getElementById('copy-log-btn'), closeLogBtn = document.getElementById('close-log-btn'), editCashModal = document.getElementById('edit-cash-modal'), cashInput = document.getElementById('cash-input'), saveCashBtn = document.getElementById('save-cash-btn'), cancelCashBtn = document.getElementById('cancel-cash-btn'), cashErrorMsg = document.getElementById('cash-error-msg'), customBuyModal = document.getElementById('custom-buy-modal'), customBuyItemName = document.getElementById('custom-buy-item-name'), customBuyInput = document.getElementById('custom-buy-input'), customBuyErrorMsg = document.getElementById('custom-buy-error-msg'), saveCustomBuyBtn = document.getElementById('save-custom-buy-btn'), cancelCustomBuyBtn = document.getElementById('cancel-custom-buy-btn'), resetConfirmModal = document.getElementById('reset-confirm-modal'), confirmResetBtn = document.getElementById('confirm-reset-btn'), cancelResetBtn = document.getElementById('cancel-reset-btn');
 
@@ -170,7 +174,13 @@
         const GAME_DATA = {
             INGREDIENTS: { flour: { name: 'Flour', cost: 2 }, sugar: { name: 'Sugar', cost: 3 }, eggs: { name: 'Eggs', cost: 4 }, cheese: { name: 'Cheese', cost: 5 }, tomato: { name: 'Tomato', cost: 3 }, dough: { name: 'Dough', cost: 4 }, potato: { name: 'Potato', cost: 1 }, beef: { name: 'Beef', cost: 8 }, bun: { name: 'Bun', cost: 2 }, lettuce: { name: 'Lettuce', cost: 2 }, milkshake_mix: { name: 'Milkshake Mix', cost: 6 }, fancy_cheese: { name: 'Fancy Cheese', cost: 9}, bacon: { name: 'Bacon', cost: 7} },
             MENU: { bread: { name: 'Bread', price: 12, ingredients: { flour: 2, eggs: 1 }, popularity: 8 }, cake: { name: 'Cake', price: 22, ingredients: { flour: 3, sugar: 4, eggs: 2 }, popularity: 6 }, pizza: { name: 'Pizza', price: 28, ingredients: { dough: 1, cheese: 2, tomato: 2 }, popularity: 10 }, fries: { name: 'Fries', price: 10, ingredients: { potato: 3 }, popularity: 9 }, burger: { name: 'Burger', price: 35, ingredients: { beef: 1, bun: 1, lettuce: 1 }, popularity: 9 }, milkshake: { name: 'Milkshake', price: 18, ingredients: { milkshake_mix: 1, sugar: 1 }, popularity: 7 }, deluxe_burger: { name: 'Deluxe Burger', price: 48, ingredients: { beef: 1, bun: 1, fancy_cheese: 1, bacon: 1 }, popularity: 5 }, gourmet_pizza: { name: 'Gourmet Pizza', price: 65, ingredients: { dough: 1, fancy_cheese: 2, bacon: 2, tomato: 1 }, popularity: 4 } },
-            EMPLOYEE_TYPES: { line_cook: { name: 'Line Cook', salary: 80, effect: { type: 'efficiency', value: 7 } }, cook: { name: 'Cook', salary: 120, effect: { type: 'efficiency', value: 12 } }, executive_chef: { name: 'Exec. Chef', salary: 200, effect: { type: 'efficiency', value: 15, bonus: 0.1 } }, dishwasher: { name: 'Dishwasher', salary: 60, effect: { type: 'capacity', value: 5 } }, cashier: { name: 'Cashier', salary: 70, effect: { type: 'bonus', value: 0.05 } }, driver: { name: 'Delivery Driver', salary: 80, effect: { type: 'delivery', value: 3 } } },
+            EMPLOYEE_TYPES: { 
+                manager: { name: 'Manager', salary: 250, ap: { general: 4 } },
+                asst_manager: { name: 'Asst. Manager', salary: 180, ap: { general: 3 } },
+                cook: { name: 'Cook', salary: 120, ap: { cooking: 6 } },
+                cashier: { name: 'Cashier', salary: 70, ap: { service: 6 } },
+                driver: { name: 'Delivery Driver', salary: 80, ap: { delivery: 6 } }
+            },
             UNLOCKS: [ { day: 3, ingredients: ['potato', 'beef', 'bun', 'lettuce'], menu: ['fries', 'burger'] }, { day: 5, ingredients: ['milkshake_mix'], menu: ['milkshake'] }, { day: 10, ingredients: ['fancy_cheese', 'bacon'], menu: [] }, { day: 14, menu: ['deluxe_burger'] }, { day: 30, menu: ['gourmet_pizza'] } ],
             OPEN_HOUR: 8,
             CLOSE_HOUR: 22
@@ -184,27 +194,13 @@
         function initGame() {
             gameState = {
                 day: 1,
-                finances: {
-                    cash: 5000,
-                    dailyRevenue: 0,
-                    dailyExpenses: 0,
-                },
-                staff: {
-                    employees: [],
-                },
-                inventory: {
-                    stock: { flour: 20, sugar: 20, eggs: 15, cheese: 10, tomato: 10, dough: 10, potato: 0, beef: 0, bun: 0, lettuce: 0, milkshake_mix: 0, fancy_cheese: 0, bacon: 0 },
-                },
-                unlocks: {
-                    ingredients: ['flour', 'sugar', 'eggs', 'cheese', 'tomato', 'dough'],
-                    menu: ['bread', 'cake', 'pizza'],
-                },
+                finances: { cash: 5000, dailyRevenue: 0, dailyExpenses: 0 },
+                staff: { employees: [] },
+                inventory: { stock: { flour: 20, sugar: 20, eggs: 15, cheese: 10, tomato: 10, dough: 10, potato: 0, beef: 0, bun: 0, lettuce: 0, milkshake_mix: 0, fancy_cheese: 0, bacon: 0 } },
+                unlocks: { ingredients: ['flour', 'sugar', 'eggs', 'cheese', 'tomato', 'dough'], menu: ['bread', 'cake', 'pizza'] },
                 settings: { maxCustomers: 10 },
                 upgrades: { oven: false, marketing_active_days: 0 },
-                events: {
-                    critic_visit_today: false,
-                    critic_sales_target: 10,
-                },
+                events: { critic_visit_today: false, critic_sales_target: 10 },
                 history: {},
                 meta: { isGameOver: false, gameStartDate: new Date().toISOString(), timeZone: 'local' }
             };
@@ -230,11 +226,9 @@
                 logMessage({ type: 'EXPENSE', message: `Paid $${totalSalary} in salaries.`, color: 'text-red-pixel', details: { amount: totalSalary, reason: 'Salaries', cashAfter: gameState.finances.cash } }, getCurrentGameDate(GAME_DATA.OPEN_HOUR));
             }
 
-            // --- DAILY EVENT CHECK ---
             handleDailyEvents();
 
-            const cooks = gameState.staff.employees.filter(e => e.effect.type === 'efficiency'), cashiers = gameState.staff.employees.filter(e => e.type === 'cashier'), drivers = gameState.staff.employees.filter(e => e.type === 'driver');
-            const cookEfficiency = cooks.reduce((sum, e) => sum + e.effect.value, 0);
+            let ap = calculateActionPoints();
             let totalPotentialCustomers = gameState.settings.maxCustomers;
             if(gameState.upgrades.marketing_active_days > 0) {
                 totalPotentialCustomers = Math.ceil(totalPotentialCustomers * 1.5);
@@ -243,30 +237,17 @@
             }
 
             const customersToday = Math.floor(Math.random() * (totalPotentialCustomers + 1));
-            let itemsCooked = 0;
             let successfulSalesToday = 0;
 
-            if (cooks.length === 0) logMessage({ type: 'SYSTEM', message: `No cooks on staff! No food can be prepared.`, color: 'text-red-pixel' }, getCurrentGameDate(12));
-            else if (cashiers.length === 0) logMessage({ type: 'SYSTEM', message: `${customersToday} customers came, but with no cashier, no sales could be made.`, color: 'text-red-pixel' }, getCurrentGameDate(12));
-            else {
-                logMessage({type: 'SYSTEM', message: `${customersToday} customers visited today.`, color: 'text-blue-pixel'}, getCurrentGameDate(GAME_DATA.OPEN_HOUR));
-                for (let i = 0; i < customersToday && itemsCooked < cookEfficiency; i++) {
-                    if (sellMenuItem(getCurrentGameDate(GAME_DATA.OPEN_HOUR + Math.floor(Math.random() * (GAME_DATA.CLOSE_HOUR - GAME_DATA.OPEN_HOUR)), Math.floor(Math.random() * 60)), false)) {
-                        itemsCooked++;
-                        successfulSalesToday++;
-                    }
+            logMessage({type: 'SYSTEM', message: `${customersToday} customers are expected today.`, color: 'text-blue-pixel'}, getCurrentGameDate(GAME_DATA.OPEN_HOUR));
+
+            for (let i = 0; i < customersToday; i++) {
+                const isDelivery = Math.random() < 0.2; // 20% chance of being a delivery
+                if (sellMenuItem(getCurrentGameDate(GAME_DATA.OPEN_HOUR + Math.floor(Math.random() * (GAME_DATA.CLOSE_HOUR - GAME_DATA.OPEN_HOUR)), Math.floor(Math.random() * 60)), isDelivery, ap)) {
+                    if (!isDelivery) successfulSalesToday++;
                 }
             }
 
-            const totalDeliveries = drivers.reduce((sum, d) => sum + Math.floor(Math.random() * (d.effect.value + 1)), 0);
-            if (cooks.length === 0 && totalDeliveries > 0) logMessage({ type: 'SYSTEM', message: `${totalDeliveries} delivery orders came in, but no cook was available.`, color: 'text-red-pixel' }, getCurrentGameDate(13));
-            else {
-                 for(let i = 0; i < totalDeliveries && itemsCooked < cookEfficiency; i++) {
-                    if (sellMenuItem(getCurrentGameDate(GAME_DATA.OPEN_HOUR + Math.floor(Math.random() * (GAME_DATA.CLOSE_HOUR - GAME_DATA.OPEN_HOUR)), Math.floor(Math.random() * 60)), true)) itemsCooked++;
-                }
-            }
-
-            // --- END OF DAY EVENT RESOLUTION ---
             if (gameState.events.critic_visit_today) {
                 if (successfulSalesToday >= gameState.events.critic_sales_target) {
                     const randomMenuItemKey = gameState.unlocks.menu[Math.floor(Math.random() * gameState.unlocks.menu.length)];
@@ -291,7 +272,6 @@
         
         function handleDailyEvents() {
             gameState.events.critic_visit_today = false; // Reset
-            // Critic has a chance to visit after day 5
             if (gameState.day > 5 && Math.random() < 0.2) { // 20% chance
                 gameState.events.critic_visit_today = true;
                 logMessage({ type: 'EVENT', message: `A food critic is visiting today! Serve ${gameState.events.critic_sales_target} customers to impress them!`, color: 'text-yellow-pixel' }, getCurrentGameDate(GAME_DATA.OPEN_HOUR, 1));
@@ -318,37 +298,70 @@
             return weightedMenu[Math.floor(Math.random() * weightedMenu.length)];
         }
 
-        function sellMenuItem(date, isDelivery = false) {
+        function sellMenuItem(date, isDelivery, ap) {
             const randomItemKey = getWeightedRandomMenuItem();
             const item = GAME_DATA.MENU[randomItemKey];
             if (!item) return false;
 
-            let ingredientsCopy = {...item.ingredients};
-            if(gameState.upgrades.oven && (randomItemKey === 'pizza' || randomItemKey === 'gourmet_pizza' || randomItemKey === 'bread')) {
-                ingredientsCopy.dough = Math.max(0, ingredientsCopy.dough -1);
+            // Check for ingredients first
+            let canMake = Object.entries(item.ingredients).every(([ingKey, amount]) => gameState.inventory.stock[ingKey] >= amount);
+            if (!canMake) {
+                logMessage({ type: 'SALE_FAIL', message: `Couldn't make ${item.name}. Out of ingredients!`, color: 'text-red-pixel', details: { item: item.name } }, date);
+                return false;
             }
 
-            let canMake = Object.entries(ingredientsCopy).every(([ingKey, amount]) => gameState.inventory.stock[ingKey] >= amount);
-
-            if (canMake) {
-                const stockBefore = { ...gameState.inventory.stock };
-                Object.entries(ingredientsCopy).forEach(([ingKey, amount]) => gameState.inventory.stock[ingKey] -= amount);
-                
-                let salePrice = item.price; let bonus = 0;
-                const chefBonus = gameState.staff.employees.filter(e => e.effect.type === 'efficiency' && e.effect.bonus).reduce((sum, e) => sum + e.effect.bonus, 0);
-                const cashierBonus = gameState.staff.employees.filter(e => e.type === 'cashier').reduce((sum, e) => sum + e.effect.value, 0);
-                
-                if (chefBonus > 0) bonus += Math.round(salePrice * chefBonus);
-                if (cashierBonus > 0 && !isDelivery) bonus += Math.round(salePrice * cashierBonus);
-                salePrice += bonus;
-
-                gameState.finances.cash += salePrice; gameState.finances.dailyRevenue += salePrice;
-                const message = `${isDelivery ? '[DELIVERY] ' : ''}Sold a ${item.name} for $${item.price}${bonus > 0 ? ` (+$${bonus} bonus)` : ''}.`;
-                logMessage({ type: 'SALE', message, color: 'text-green-pixel', details: { item: item.name, price: item.price, bonus, salePrice, isDelivery, ingredientsUsed: ingredientsCopy, cashAfter: gameState.finances.cash, stockBefore, stockAfter: { ...gameState.inventory.stock } } }, date);
-                return true;
-            } else {
-                logMessage({ type: 'SALE_FAIL', message: `Couldn't make ${item.name}. Out of ingredients!`, color: 'text-red-pixel', details: { item: item.name, missing: ingredientsCopy } }, date);
+            // Check for Action Points
+            const requiredAP = { cooking: 1, service: isDelivery ? 0 : 1, delivery: isDelivery ? 1 : 0 };
+            if (!hasEnoughAP(ap, requiredAP)) {
+                let reason = !hasEnoughAP(ap, {cooking:1}) ? 'cooking' : (isDelivery ? 'delivery' : 'service');
+                logMessage({ type: 'SALE_FAIL', message: `Order for ${item.name} failed. Not enough ${reason} capacity.`, color: 'text-red-pixel', details: { item: item.name } }, date);
                 return false;
+            }
+
+            // Deduct resources
+            deductAP(ap, requiredAP);
+            Object.entries(item.ingredients).forEach(([ingKey, amount]) => gameState.inventory.stock[ingKey] -= amount);
+            
+            // Calculate revenue
+            let salePrice = item.price;
+            gameState.finances.cash += salePrice;
+            gameState.finances.dailyRevenue += salePrice;
+
+            logMessage({ type: 'SALE', message: `${isDelivery ? '[DELIVERY] ' : ''}Sold a ${item.name} for $${item.price}.`, color: 'text-green-pixel', details: { item: item.name, price: item.price, cashAfter: gameState.finances.cash } }, date);
+            return true;
+        }
+
+        function calculateActionPoints() {
+            const ap = { cooking: 0, service: 0, delivery: 0, general: 0 };
+            gameState.staff.employees.forEach(emp => {
+                for (const key in emp.ap) {
+                    ap[key] += emp.ap[key];
+                }
+            });
+            return ap;
+        }
+
+        function hasEnoughAP(ap, required) {
+            for (const type in required) {
+                if (required[type] > 0) {
+                    const available = (ap[type] || 0) + (ap.general || 0);
+                    if (available < required[type]) return false;
+                }
+            }
+            return true;
+        }
+
+        function deductAP(ap, required) {
+            for (const type in required) {
+                if (required[type] > 0) {
+                    const needed = required[type];
+                    const takenFromSpecific = Math.min(needed, ap[type] || 0);
+                    ap[type] -= takenFromSpecific;
+                    const remainingNeeded = needed - takenFromSpecific;
+                    if (remainingNeeded > 0) {
+                        ap.general -= remainingNeeded;
+                    }
+                }
             }
         }
         
@@ -419,7 +432,7 @@
         function addEmployee(typeKey) {
              if (gameState.meta.isGameOver || !GAME_DATA.EMPLOYEE_TYPES[typeKey]) return;
              const empTmpl = GAME_DATA.EMPLOYEE_TYPES[typeKey];
-             const newEmployee = { id: Date.now() + Math.random(), type: typeKey, name: empTmpl.name, salary: empTmpl.salary, effect: empTmpl.effect };
+             const newEmployee = { id: Date.now() + Math.random(), type: typeKey, name: empTmpl.name, salary: empTmpl.salary, ap: empTmpl.ap };
              gameState.staff.employees.push(newEmployee);
              logMessage({ type: 'HIRE', message: `Hired a ${empTmpl.name} for $${empTmpl.salary}/day.`, color: 'text-blue-pixel', details: { employee: newEmployee } });
              updateUI();
@@ -468,7 +481,6 @@
 
             menuItemsContainer.innerHTML = gameState.unlocks.menu.map(key => {
                 const item = GAME_DATA.MENU[key];
-                const ingredientsText = Object.entries(item.ingredients).map(([ingKey, amount]) => `${amount} ${GAME_DATA.INGREDIENTS[ingKey].name}`).join(', ');
                 return `<div><p class="font-bold">${item.name} - <span class="text-green-pixel">$${item.price}</span></p><p class="text-xs text-gray-400">Popularity: ${item.popularity}</p></div>`;
             }).join('');
 
@@ -485,6 +497,14 @@
                     </div>
                 `;
             }).join('');
+
+            const currentAP = calculateActionPoints();
+            apDisplay.innerHTML = `
+                <p>Cooking AP: ${currentAP.cooking}</p>
+                <p>Service AP: ${currentAP.service}</p>
+                <p>Delivery AP: ${currentAP.delivery}</p>
+                <p>General AP: ${currentAP.general}</p>
+            `;
 
             stockItemsContainer.innerHTML = gameState.unlocks.ingredients.map(key => {
                 const ingredient = GAME_DATA.INGREDIENTS[key];

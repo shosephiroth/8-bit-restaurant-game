@@ -313,8 +313,38 @@
             renderLog();
         }
 
+        function formatLogEntryHTML(log) {
+            let detailsHTML = '';
+            const details = log.details || {};
+
+            switch (log.type) {
+                case 'SALE':
+                    const ingredientsText = Object.entries(details.ingredientsUsed)
+                        .map(([key, amount]) => `${amount} ${MASTER_INGREDIENTS[key].name}`)
+                        .join(', ');
+                    detailsHTML = `
+                        <p class="text-xs text-gray-400 pl-4">Ingredients: ${ingredientsText}</p>
+                        <p class="text-xs text-gray-400 pl-4">Cash after sale: $${details.cashAfter}</p>
+                    `;
+                    break;
+                case 'INVENTORY':
+                    detailsHTML = `<p class="text-xs text-gray-400 pl-4">Cash after purchase: $${details.cashAfter}</p>`;
+                    break;
+                case 'EXPENSE':
+                    detailsHTML = `<p class="text-xs text-gray-400 pl-4">Cash after expense: $${details.cashAfter}</p>`;
+                    break;
+            }
+
+            return `
+                <div class="log-message pb-2">
+                    <p class="${log.color}">[${log.timestamp}] ${log.message}</p>
+                    ${detailsHTML}
+                </div>
+            `;
+        }
+
         function logMessage(logObject, date = new Date()) { logObject.timestamp = formatTimestamp(date); logObject.raw_timestamp = date.toISOString(); if (!gameState.history[gameState.day]) gameState.history[gameState.day] = []; gameState.history[gameState.day].unshift(logObject); if(document.body.contains(gameLogContainer)) renderLog(); }
-        function renderLog() { const currentLog = gameState.history[gameState.day] || []; gameLogContainer.innerHTML = currentLog.map(log => `<p class="log-message pb-1 ${log.color}">[${log.timestamp}] ${log.message}</p>`).join(''); }
+        function renderLog() { const currentLog = gameState.history[gameState.day] || []; gameLogContainer.innerHTML = currentLog.map(formatLogEntryHTML).join(''); }
         function toggleTimezone() { gameState.meta.timeZone = gameState.meta.timeZone === 'local' ? 'UTC' : 'local'; updateUI(); }
         function showJsonLog() { const logCopy = JSON.parse(JSON.stringify(gameState.history)); for(const day in logCopy) { logCopy[day].forEach(log => { log.timestamp = formatTimestamp(new Date(log.raw_timestamp)); delete log.raw_timestamp; }); } jsonLogTextarea.value = JSON.stringify(logCopy, null, 2); jsonLogModal.classList.remove('hidden'); }
         function hideJsonLog() { jsonLogModal.classList.add('hidden'); }

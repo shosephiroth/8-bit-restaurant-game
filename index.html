@@ -118,12 +118,12 @@
         <!-- Main Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-1 space-y-6">
-                <div id="menu-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Menu</h2><div id="menu-items" class="space-y-3"></div></div>
-                <div id="employees-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Manage Employees</h2><div id="employee-controls" class="space-y-2"></div></div>
                  <div id="capacity-panel" class="panel p-4 rounded-md space-y-2">
                     <h2 class="text-lg mb-2 text-yellow-pixel">Daily Capacity</h2>
                     <div id="ap-display" class="text-xs"></div>
                 </div>
+                <div id="menu-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Menu</h2><div id="menu-items" class="space-y-3"></div></div>
+                <div id="employees-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Manage Employees</h2><div id="employee-controls" class="space-y-2"></div></div>
             </div>
             <div class="lg:col-span-1 space-y-6">
                 <div id="stock-panel" class="panel p-4 rounded-md">
@@ -385,10 +385,18 @@
         }
 
         function hasEnoughAP(ap, required) {
+            let availableGeneral = ap.general || 0;
             for (const type in required) {
-                if (required[type] > 0) {
-                    const available = (ap[type] || 0) + (ap.general || 0);
-                    if (available < required[type]) return false;
+                if (type !== 'general' && required[type] > 0) {
+                    const needed = required[type];
+                    const availableSpecific = ap[type] || 0;
+                    const takenFromSpecific = Math.min(needed, availableSpecific);
+                    const remainingNeeded = needed - takenFromSpecific;
+
+                    if (remainingNeeded > availableGeneral) {
+                        return false; 
+                    }
+                    availableGeneral -= remainingNeeded;
                 }
             }
             return true;
@@ -441,35 +449,12 @@
         }
 
         function bulkSetStock(amount) {
-            if (amount === 0) {
-                gameState.unlocks.ingredients.forEach(key => {
-                    gameState.inventory.stock[key] = 0;
-                });
-                logMessage({ type: 'INVENTORY', message: `Reset all stock to 0.`, color: 'text-yellow-pixel' });
-                updateUI();
-                return;
-            }
-
-            let totalCost = 0;
+            // No cost for testing
             gameState.unlocks.ingredients.forEach(key => {
-                const needed = amount - gameState.inventory.stock[key];
-                if (needed > 0) {
-                    totalCost += GAME_DATA.INGREDIENTS[key].cost * needed;
-                }
+                gameState.inventory.stock[key] = amount;
             });
-
-            if (gameState.finances.cash >= totalCost) {
-                gameState.finances.cash -= totalCost;
-                gameState.unlocks.ingredients.forEach(key => {
-                    if (gameState.inventory.stock[key] < amount) {
-                        gameState.inventory.stock[key] = amount;
-                    }
-                });
-                logMessage({ type: 'INVENTORY', message: `Bulk topped up all ingredients to ${amount} for $${totalCost}.`, color: 'text-blue-pixel', details: { amount, cost: totalCost, cashAfter: gameState.finances.cash } });
-                updateUI();
-            } else {
-                logMessage({ type: 'INVENTORY_FAIL', message: `Not enough cash to top up stock (cost: $${totalCost}).`, color: 'text-red-pixel' });
-            }
+            logMessage({ type: 'INVENTORY', message: `[TEST] Bulk set all stock to ${amount}.`, color: 'text-yellow-pixel' });
+            updateUI();
         }
         
         function addEmployee(typeKey) {
@@ -547,11 +532,13 @@
             }).join('');
 
             const currentAP = calculateActionPoints();
+            const totalAP = Object.values(currentAP).reduce((a, b) => a + b, 0);
             apDisplay.innerHTML = `
                 <p>Cooking AP: ${currentAP.cooking}</p>
                 <p>Service AP: ${currentAP.service}</p>
                 <p>Delivery AP: ${currentAP.delivery}</p>
                 <p>General AP: ${currentAP.general}</p>
+                <p class="mt-2 text-yellow-pixel">Total AP: ${totalAP}</p>
             `;
 
             stockItemsContainer.innerHTML = gameState.unlocks.ingredients.map(key => {

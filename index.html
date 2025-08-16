@@ -109,7 +109,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-1 space-y-6">
                 <div id="menu-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Menu</h2><div id="menu-items" class="space-y-3"></div></div>
-                <div id="employees-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Employees</h2><div id="employee-list" class="space-y-2 mb-4"></div><div id="hire-buttons" class="space-y-2"></div></div>
+                <div id="employees-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Manage Employees</h2><div id="employee-controls" class="space-y-2"></div></div>
             </div>
             <div class="lg:col-span-1 space-y-6">
                 <div id="stock-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Ingredient Stock</h2><div id="stock-items" class="space-y-3"></div></div>
@@ -149,7 +149,7 @@
 
     <script>
         // DOM Elements
-        const dayDisplay = document.getElementById('day-display'), timezoneDisplay = document.getElementById('timezone-display'), cashDisplay = document.getElementById('cash-display'), editCashBtn = document.getElementById('edit-cash-btn'), revenueDisplay = document.getElementById('revenue-display'), expensesDisplay = document.getElementById('expenses-display'), menuItemsContainer = document.getElementById('menu-items'), employeeListContainer = document.getElementById('employee-list'), hireButtonsContainer = document.getElementById('hire-buttons'), stockItemsContainer = document.getElementById('stock-items'), gameLogContainer = document.getElementById('game-log'), nextDayBtn = document.getElementById('next-day-btn'), timezoneBtn = document.getElementById('timezone-btn'), jsonLogBtn = document.getElementById('json-log-btn'), exportBtn = document.getElementById('export-btn'), importBtn = document.getElementById('import-btn'), importFileInput = document.getElementById('import-file-input'), customerSlider = document.getElementById('customer-slider'), customerCountDisplay = document.getElementById('customer-count-display'), upgradeOvenBtn = document.getElementById('upgrade-oven-btn'), marketingBtn = document.getElementById('marketing-btn');
+        const dayDisplay = document.getElementById('day-display'), timezoneDisplay = document.getElementById('timezone-display'), cashDisplay = document.getElementById('cash-display'), editCashBtn = document.getElementById('edit-cash-btn'), revenueDisplay = document.getElementById('revenue-display'), expensesDisplay = document.getElementById('expenses-display'), menuItemsContainer = document.getElementById('menu-items'), employeeControlsContainer = document.getElementById('employee-controls'), stockItemsContainer = document.getElementById('stock-items'), gameLogContainer = document.getElementById('game-log'), nextDayBtn = document.getElementById('next-day-btn'), timezoneBtn = document.getElementById('timezone-btn'), jsonLogBtn = document.getElementById('json-log-btn'), exportBtn = document.getElementById('export-btn'), importBtn = document.getElementById('import-btn'), importFileInput = document.getElementById('import-file-input'), customerSlider = document.getElementById('customer-slider'), customerCountDisplay = document.getElementById('customer-count-display'), upgradeOvenBtn = document.getElementById('upgrade-oven-btn'), marketingBtn = document.getElementById('marketing-btn');
         // Modals
         const gameOverModal = document.getElementById('game-over-modal'), gameOverMessage = document.getElementById('game-over-message'), restartBtn = document.getElementById('restart-btn'), jsonLogModal = document.getElementById('json-log-modal'), jsonLogTextarea = document.getElementById('json-log-textarea'), copyLogBtn = document.getElementById('copy-log-btn'), closeLogBtn = document.getElementById('close-log-btn'), editCashModal = document.getElementById('edit-cash-modal'), cashInput = document.getElementById('cash-input'), saveCashBtn = document.getElementById('save-cash-btn'), cancelCashBtn = document.getElementById('cancel-cash-btn'), cashErrorMsg = document.getElementById('cash-error-msg'), customBuyModal = document.getElementById('custom-buy-modal'), customBuyItemName = document.getElementById('custom-buy-item-name'), customBuyInput = document.getElementById('custom-buy-input'), customBuyErrorMsg = document.getElementById('custom-buy-error-msg'), saveCustomBuyBtn = document.getElementById('save-custom-buy-btn'), cancelCustomBuyBtn = document.getElementById('cancel-custom-buy-btn');
 
@@ -266,7 +266,7 @@
 
             let ingredientsCopy = {...item.ingredients};
             if(gameState.upgrades.oven && (randomItemKey === 'pizza' || randomItemKey === 'gourmet_pizza' || randomItemKey === 'bread')) {
-                ingredientsCopy.dough = Math.max(1, ingredientsCopy.dough -1);
+                ingredientsCopy.dough = Math.max(0, ingredientsCopy.dough -1);
             }
 
             let canMake = Object.entries(ingredientsCopy).every(([ingKey, amount]) => gameState.stock[ingKey] >= amount);
@@ -307,13 +307,23 @@
             }
         }
         
-        function hireEmployee(typeKey) {
+        function addEmployee(typeKey) {
              if (gameState.meta.isGameOver || !EMPLOYEE_TYPES[typeKey]) return;
              const empTmpl = EMPLOYEE_TYPES[typeKey];
-             const newEmployee = { id: Date.now(), type: typeKey, name: empTmpl.name, salary: empTmpl.salary, effect: empTmpl.effect };
+             const newEmployee = { id: Date.now() + Math.random(), type: typeKey, name: empTmpl.name, salary: empTmpl.salary, effect: empTmpl.effect };
              gameState.employees.push(newEmployee);
              logMessage({ type: 'HIRE', message: `Hired a ${empTmpl.name} for $${empTmpl.salary}/day.`, color: 'text-blue-pixel', details: { employee: newEmployee } });
              updateUI();
+        }
+        
+        function removeEmployee(typeKey) {
+            if (gameState.meta.isGameOver || !EMPLOYEE_TYPES[typeKey]) return;
+            const indexToRemove = gameState.employees.findLastIndex(emp => emp.type === typeKey);
+            if (indexToRemove !== -1) {
+                const removedEmployee = gameState.employees.splice(indexToRemove, 1)[0];
+                logMessage({ type: 'FIRE', message: `Removed a ${removedEmployee.name}.`, color: 'text-red-pixel', details: { employee: removedEmployee } });
+                updateUI();
+            }
         }
 
         function purchaseUpgrade(type) {
@@ -350,11 +360,22 @@
             menuItemsContainer.innerHTML = gameState.unlocks.menu.map(key => {
                 const item = MASTER_MENU[key];
                 const ingredientsText = Object.entries(item.ingredients).map(([ingKey, amount]) => `${amount} ${MASTER_INGREDIENTS[ingKey].name}`).join(', ');
-                return `<div><p class="font-bold">${item.name} - <span class="text-green-pixel">$${item.price}</span></p><p class="text-xs text-gray-400">${ingredientsText}</p></div>`;
+                return `<div><p class="font-bold">${item.name} - <span class="text-green-pixel">$${item.price}</span></p><p class="text-xs text-gray-400">Popularity: ${item.popularity}</p></div>`;
             }).join('');
 
-            employeeListContainer.innerHTML = gameState.employees.length === 0 ? `<p class="text-gray-400">No employees yet.</p>` : gameState.employees.map((emp, index) => `<div class="flex justify-between items-center"><p>${emp.name} #${index + 1}</p><p class="text-red-pixel">-$${emp.salary}/day</p></div>`).join('');
-            hireButtonsContainer.innerHTML = Object.entries(EMPLOYEE_TYPES).map(([key, emp]) => `<button class="btn w-full py-2 rounded-md text-xs" onclick="hireEmployee('${key}')">Hire ${emp.name} ($${emp.salary}/day)</button>`).join('');
+            employeeControlsContainer.innerHTML = Object.entries(EMPLOYEE_TYPES).map(([key, emp]) => {
+                const count = gameState.employees.filter(e => e.type === key).length;
+                return `
+                    <div class="grid grid-cols-3 items-center gap-2 text-xs">
+                        <span class="col-span-1">${emp.name} ($${emp.salary})</span>
+                        <div class="col-span-2 flex items-center justify-end gap-2">
+                            <button class="btn px-2 py-1" onclick="removeEmployee('${key}')" ${count === 0 ? 'disabled' : ''}>-</button>
+                            <span class="w-4 text-center">${count}</span>
+                            <button class="btn px-2 py-1" onclick="addEmployee('${key}')">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
             stockItemsContainer.innerHTML = gameState.unlocks.ingredients.map(key => {
                 const ingredient = MASTER_INGREDIENTS[key];

@@ -40,6 +40,10 @@
             transform: translateY(0);
             box-shadow: none;
         }
+        .btn-small {
+            padding: 2px 6px;
+            font-size: 10px;
+        }
         .log-message {
             border-bottom: 1px dashed #404040;
         }
@@ -82,7 +86,10 @@
             </div>
             <div>
                 <p class="text-sm text-gray-400">Cash</p>
-                <p id="cash-display" class="text-2xl text-green-pixel">$500</p>
+                <div class="flex items-center justify-center gap-2">
+                    <p id="cash-display" class="text-2xl text-green-pixel">$500</p>
+                    <button id="edit-cash-btn" class="btn btn-small rounded">Edit</button>
+                </div>
             </div>
             <div>
                 <p class="text-sm text-gray-400">Revenue</p>
@@ -98,7 +105,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-1 space-y-6">
                 <div id="menu-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Menu</h2><div id="menu-items" class="space-y-3"></div></div>
-                <div id="employees-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Employees</h2><div id="employee-list" class="space-y-2 mb-4"></div><button id="hire-btn" class="btn w-full py-2 rounded-md">Hire Cook ($100/day)</button></div>
+                <div id="employees-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Employees</h2><div id="employee-list" class="space-y-2 mb-4"></div><div id="hire-buttons" class="space-y-2"></div></div>
             </div>
             <div class="lg:col-span-1 space-y-6">
                 <div id="stock-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Ingredient Stock</h2><div id="stock-items" class="space-y-3"></div></div>
@@ -116,14 +123,15 @@
         const dayDisplay = document.getElementById('day-display');
         const timezoneDisplay = document.getElementById('timezone-display');
         const cashDisplay = document.getElementById('cash-display');
+        const editCashBtn = document.getElementById('edit-cash-btn');
         const revenueDisplay = document.getElementById('revenue-display');
         const expensesDisplay = document.getElementById('expenses-display');
         const menuItemsContainer = document.getElementById('menu-items');
         const employeeListContainer = document.getElementById('employee-list');
+        const hireButtonsContainer = document.getElementById('hire-buttons');
         const stockItemsContainer = document.getElementById('stock-items');
         const gameLogContainer = document.getElementById('game-log');
         const nextDayBtn = document.getElementById('next-day-btn');
-        const hireBtn = document.getElementById('hire-btn');
         const timezoneBtn = document.getElementById('timezone-btn');
         const jsonLogBtn = document.getElementById('json-log-btn');
         const gameOverModal = document.getElementById('game-over-modal');
@@ -139,42 +147,28 @@
         // --- GAME DATA ---
         const INGREDIENTS = { flour: { name: 'Flour', cost: 2 }, sugar: { name: 'Sugar', cost: 3 }, eggs: { name: 'Eggs', cost: 4 }, cheese: { name: 'Cheese', cost: 5 }, tomato: { name: 'Tomato', cost: 3 }, dough: { name: 'Dough', cost: 4 }, potato: { name: 'Potato', cost: 1 }, beef: { name: 'Beef', cost: 8 }, bun: { name: 'Bun', cost: 2 }, lettuce: { name: 'Lettuce', cost: 2 }, milkshake_mix: { name: 'Milkshake Mix', cost: 6 }, fancy_cheese: { name: 'Fancy Cheese', cost: 9}, bacon: { name: 'Bacon', cost: 7} };
         const MENU = { bread: { name: 'Bread', price: 8, ingredients: { flour: 2, eggs: 1 } }, cake: { name: 'Cake', price: 15, ingredients: { flour: 3, sugar: 4, eggs: 2 } }, pizza: { name: 'Pizza', price: 20, ingredients: { dough: 1, cheese: 2, tomato: 2 } }, fries: { name: 'Fries', price: 7, ingredients: { potato: 3 } }, burger: { name: 'Burger', price: 25, ingredients: { beef: 1, bun: 1, lettuce: 1 } }, milkshake: { name: 'Milkshake', price: 12, ingredients: { milkshake_mix: 1, sugar: 1 } }, deluxe_burger: { name: 'Deluxe Burger', price: 35, ingredients: { beef: 1, bun: 1, fancy_cheese: 1, bacon: 1 } }, gourmet_pizza: { name: 'Gourmet Pizza', price: 45, ingredients: { dough: 1, fancy_cheese: 2, bacon: 2, tomato: 1 } } };
-        const EMPLOYEE_TYPES = { cook: { name: 'Cook', salary: 100, efficiency: 10 } };
+        const EMPLOYEE_TYPES = { 
+            cook: { name: 'Cook', salary: 100, effect: { type: 'efficiency', value: 10 } },
+            dishwasher: { name: 'Dishwasher', salary: 60, effect: { type: 'capacity', value: 5 } },
+            cashier: { name: 'Cashier', salary: 70, effect: { type: 'bonus', value: 0.05 } }, // 5% bonus
+            driver: { name: 'Delivery Driver', salary: 80, effect: { type: 'delivery', value: 3 } } // 3 deliveries/day
+        };
         const UNLOCKS = [ { day: 3, ingredients: ['potato', 'beef', 'bun'], menu: ['fries', 'burger'], message: "New items available: Fries and Burgers!" }, { day: 5, ingredients: ['lettuce', 'milkshake_mix'], menu: ['milkshake'], message: "You can now sell Milkshakes!" }, { day: 10, ingredients: ['fancy_cheese', 'bacon'], menu: [], message: "Premium ingredients unlocked!" }, { day: 14, menu: ['deluxe_burger'], message: "A new creation: The Deluxe Burger!" }, { day: 30, menu: ['gourmet_pizza'], message: "Master Chef! You've unlocked the Gourmet Pizza!" } ];
         const OPEN_HOUR = 8;
         const CLOSE_HOUR = 22;
 
         // --- TIME & DATE HELPERS ---
-        function getCurrentGameDate(hour, minute = 0, second = 0) {
-            const date = new Date(gameState.gameStartDate);
-            date.setDate(date.getDate() + gameState.day - 1);
-            date.setHours(hour, minute, second, 0);
-            return date;
-        }
-
-        function formatTimestamp(date) {
-            if (gameState.timeZone === 'local') {
-                return date.toLocaleString();
-            } else {
-                return date.toUTCString();
-            }
-        }
+        function getCurrentGameDate(hour, minute = 0, second = 0) { const date = new Date(gameState.gameStartDate); date.setDate(date.getDate() + gameState.day - 1); date.setHours(hour, minute, second, 0); return date; }
+        function formatTimestamp(date) { return gameState.timeZone === 'local' ? date.toLocaleString() : date.toUTCString(); }
 
         // --- CORE GAME FUNCTIONS ---
         function initGame() {
             gameState = {
-                day: 1,
-                cash: 500,
-                dailyRevenue: 0,
-                dailyExpenses: 0,
-                employees: [],
+                day: 1, cash: 500, dailyRevenue: 0, dailyExpenses: 0, employees: [],
                 stock: { flour: 20, sugar: 20, eggs: 15, cheese: 10, tomato: 10, dough: 10, potato: 0, beef: 0, bun: 0, lettuce: 0, milkshake_mix: 0, fancy_cheese: 0, bacon: 0 },
                 unlockedIngredients: ['flour', 'sugar', 'eggs', 'cheese', 'tomato', 'dough'],
                 unlockedMenuItems: ['bread', 'cake', 'pizza'],
-                log: [],
-                isGameOver: false,
-                gameStartDate: new Date(),
-                timeZone: 'local', // 'local' or 'UTC'
+                log: [], isGameOver: false, gameStartDate: new Date(), timeZone: 'local',
             };
             logMessage({ type: 'SYSTEM', message: "Welcome! Let's get cooking!", color: 'text-yellow-pixel' });
             updateUI();
@@ -184,37 +178,36 @@
 
         function nextDay() {
             if (gameState.isGameOver) return;
-
-            // 1. Reset daily stats and clear log
-            gameState.dailyRevenue = 0;
-            gameState.dailyExpenses = 0;
-            gameState.log = [];
+            gameState.dailyRevenue = 0; gameState.dailyExpenses = 0; gameState.log = [];
             
-            // 2. Pay Employees at the start of the day
             const totalSalary = gameState.employees.reduce((sum, emp) => sum + emp.salary, 0);
             if (totalSalary > 0) {
-                gameState.cash -= totalSalary;
-                gameState.dailyExpenses += totalSalary;
-                logMessage({
-                    type: 'EXPENSE',
-                    message: `Paid $${totalSalary} in salaries.`,
-                    color: 'text-red-pixel',
-                    details: { amount: totalSalary, reason: 'Salaries', cashAfter: gameState.cash }
-                }, getCurrentGameDate(OPEN_HOUR));
+                gameState.cash -= totalSalary; gameState.dailyExpenses += totalSalary;
+                logMessage({ type: 'EXPENSE', message: `Paid $${totalSalary} in salaries.`, color: 'text-red-pixel', details: { amount: totalSalary, reason: 'Salaries', cashAfter: gameState.cash } }, getCurrentGameDate(OPEN_HOUR));
             }
 
-            // 3. Simulate hourly sales
-            const maxCustomersPerHour = Math.ceil(gameState.employees.reduce((sum, emp) => sum + emp.efficiency, 5) / (CLOSE_HOUR - OPEN_HOUR));
+            const cookEfficiency = gameState.employees.filter(e => e.effect.type === 'efficiency').reduce((sum, e) => sum + e.effect.value, 0);
+            const capacityBonus = gameState.employees.filter(e => e.effect.type === 'capacity').reduce((sum, e) => sum + e.effect.value, 0);
+            const baseCustomers = 5;
+            const totalPotentialCustomers = baseCustomers + cookEfficiency + capacityBonus;
+            const maxCustomersPerHour = Math.ceil(totalPotentialCustomers / (CLOSE_HOUR - OPEN_HOUR));
+
             for (let hour = OPEN_HOUR; hour < CLOSE_HOUR; hour++) {
                 const customersThisHour = Math.floor(Math.random() * (maxCustomersPerHour + 1));
                 for (let i = 0; i < customersThisHour; i++) {
-                    const minute = Math.floor(Math.random() * 60);
-                    const second = Math.floor(Math.random() * 60);
-                    sellMenuItem(getCurrentGameDate(hour, minute, second));
+                    sellMenuItem(getCurrentGameDate(hour, Math.floor(Math.random() * 60), Math.floor(Math.random() * 60)));
                 }
             }
+            
+            // Simulate deliveries
+            const drivers = gameState.employees.filter(e => e.effect.type === 'delivery');
+            drivers.forEach(driver => {
+                const deliveries = Math.floor(Math.random() * (driver.effect.value + 1));
+                for(let i = 0; i < deliveries; i++) {
+                    sellMenuItem(getCurrentGameDate(OPEN_HOUR + Math.floor(Math.random() * (CLOSE_HOUR - OPEN_HOUR)), Math.floor(Math.random() * 60)), true);
+                }
+            });
 
-            // 4. Day-end summary and checks
             logMessage({ type: 'SYSTEM', message: `Day ${gameState.day} summary: Revenue: $${gameState.dailyRevenue}, Expenses: $${gameState.dailyExpenses}.`, color: 'text-yellow-pixel' }, getCurrentGameDate(CLOSE_HOUR));
             
             gameState.day++;
@@ -235,29 +228,29 @@
             }
         }
 
-        function sellMenuItem(date) {
+        function sellMenuItem(date, isDelivery = false) {
             const randomItemKey = gameState.unlockedMenuItems[Math.floor(Math.random() * gameState.unlockedMenuItems.length)];
             const item = MENU[randomItemKey];
-
             let canMake = Object.entries(item.ingredients).every(([ingKey, amount]) => gameState.stock[ingKey] >= amount);
 
             if (canMake) {
                 Object.entries(item.ingredients).forEach(([ingKey, amount]) => gameState.stock[ingKey] -= amount);
-                gameState.cash += item.price;
-                gameState.dailyRevenue += item.price;
-                logMessage({
-                    type: 'SALE',
-                    message: `Sold a ${item.name} for $${item.price}.`,
-                    color: 'text-green-pixel',
-                    details: { item: item.name, price: item.price, ingredientsUsed: item.ingredients, cashAfter: gameState.cash, stockAfter: { ...gameState.stock } }
-                }, date);
+                
+                let salePrice = item.price;
+                let bonus = 0;
+                const cashierBonus = gameState.employees.filter(e => e.effect.type === 'bonus').reduce((sum, e) => sum + e.effect.value, 0);
+                if (cashierBonus > 0 && !isDelivery) {
+                    bonus = Math.round(salePrice * cashierBonus);
+                    salePrice += bonus;
+                }
+
+                gameState.cash += salePrice;
+                gameState.dailyRevenue += salePrice;
+                
+                const message = `${isDelivery ? '[DELIVERY] ' : ''}Sold a ${item.name} for $${item.price}${bonus > 0 ? ` (+$${bonus} bonus)` : ''}.`;
+                logMessage({ type: 'SALE', message, color: 'text-green-pixel', details: { item: item.name, price: item.price, bonus, salePrice, isDelivery, ingredientsUsed: item.ingredients, cashAfter: gameState.cash, stockAfter: { ...gameState.stock } } }, date);
             } else {
-                logMessage({
-                    type: 'SALE_FAIL',
-                    message: `Couldn't make ${item.name}. Out of ingredients!`,
-                    color: 'text-red-pixel',
-                    details: { item: item.name, missing: item.ingredients }
-                }, date);
+                logMessage({ type: 'SALE_FAIL', message: `Couldn't make ${item.name}. Out of ingredients!`, color: 'text-red-pixel', details: { item: item.name, missing: item.ingredients } }, date);
             }
         }
         
@@ -265,16 +258,9 @@
             if (gameState.isGameOver || amount <= 0) return;
             const ingredient = INGREDIENTS[ingredientKey];
             const cost = ingredient.cost * amount;
-
             if (gameState.cash >= cost) {
-                gameState.cash -= cost;
-                gameState.stock[ingredientKey] += amount;
-                logMessage({
-                    type: 'INVENTORY',
-                    message: `Bought ${amount} ${ingredient.name} for $${cost}.`,
-                    color: 'text-blue-pixel',
-                    details: { item: ingredient.name, amount, cost, cashAfter: gameState.cash, stockAfter: { ...gameState.stock } }
-                });
+                gameState.cash -= cost; gameState.stock[ingredientKey] += amount;
+                logMessage({ type: 'INVENTORY', message: `Bought ${amount} ${ingredient.name} for $${cost}.`, color: 'text-blue-pixel', details: { item: ingredient.name, amount, cost, cashAfter: gameState.cash, stockAfter: { ...gameState.stock } } });
                 updateUI();
             } else {
                 logMessage({ type: 'INVENTORY_FAIL', message: `Not enough cash to buy ${ingredient.name}.`, color: 'text-red-pixel', details: { item: ingredient.name, cost } });
@@ -282,12 +268,31 @@
             }
         }
         
-        function hireEmployee() {
-             if (gameState.isGameOver) return;
-             const cook = EMPLOYEE_TYPES.cook;
-             gameState.employees.push({ ...cook });
-             logMessage({ type: 'HIRE', message: `Hired a ${cook.name} for $${cook.salary}/day.`, color: 'text-blue-pixel', details: { employee: cook } });
+        function hireEmployee(type) {
+             if (gameState.isGameOver || !EMPLOYEE_TYPES[type]) return;
+             const empTmpl = EMPLOYEE_TYPES[type];
+             gameState.employees.push({ ...empTmpl });
+             logMessage({ type: 'HIRE', message: `Hired a ${empTmpl.name} for $${empTmpl.salary}/day.`, color: 'text-blue-pixel', details: { employee: empTmpl } });
              updateUI();
+        }
+
+        function updateCash() {
+            const currentCash = gameState.cash;
+            const newCashStr = prompt("Enter new cash amount:", currentCash);
+            if (newCashStr === null) return; // User cancelled
+            const newCash = parseInt(newCashStr, 10);
+            if (!isNaN(newCash)) {
+                gameState.cash = newCash;
+                logMessage({
+                    type: 'MANUAL_EDIT',
+                    message: `Cash manually updated from $${currentCash} to $${newCash}.`,
+                    color: 'text-yellow-pixel',
+                    details: { from: currentCash, to: newCash }
+                });
+                updateUI();
+            } else {
+                alert("Invalid number entered.");
+            }
         }
 
         function endGame(message) {
@@ -313,6 +318,10 @@
             });
 
             employeeListContainer.innerHTML = gameState.employees.length === 0 ? `<p class="text-gray-400">No employees yet.</p>` : gameState.employees.map((emp, index) => `<div class="flex justify-between items-center"><p>${emp.name} #${index + 1}</p><p class="text-red-pixel">-$${emp.salary}/day</p></div>`).join('');
+            
+            hireButtonsContainer.innerHTML = Object.entries(EMPLOYEE_TYPES).map(([key, emp]) => 
+                `<button class="btn w-full py-2 rounded-md" onclick="hireEmployee('${key}')">Hire ${emp.name} ($${emp.salary}/day)</button>`
+            ).join('');
 
             stockItemsContainer.innerHTML = '';
             gameState.unlockedIngredients.forEach(key => {
@@ -324,56 +333,22 @@
         }
 
         function logMessage(logObject, date = new Date()) {
-            logObject.timestamp = formatTimestamp(date);
-            logObject.raw_timestamp = date.toISOString();
+            logObject.timestamp = formatTimestamp(date); logObject.raw_timestamp = date.toISOString();
             gameState.log.unshift(logObject);
             if (gameState.log.length > 200) gameState.log.pop();
             if(document.body.contains(gameLogContainer)) renderLog();
         }
         
-        function renderLog() {
-            gameLogContainer.innerHTML = gameState.log.map(log => `<p class="log-message pb-1 ${log.color}">[${log.timestamp}] ${log.message}</p>`).join('');
-        }
-
-        function toggleTimezone() {
-            gameState.timeZone = gameState.timeZone === 'local' ? 'UTC' : 'local';
-            // Re-format all existing log timestamps
-            gameState.log.forEach(log => {
-                log.timestamp = formatTimestamp(new Date(log.raw_timestamp));
-            });
-            updateUI();
-        }
-
-        function showJsonLog() {
-            // Create a deep copy to avoid modifying original log with formatted timestamps
-            const logCopy = JSON.parse(JSON.stringify(gameState.log));
-            logCopy.forEach(log => {
-                log.timestamp = formatTimestamp(new Date(log.raw_timestamp));
-                delete log.raw_timestamp; // Clean up for export
-            });
-            jsonLogTextarea.value = JSON.stringify(logCopy, null, 2);
-            jsonLogModal.classList.remove('hidden');
-        }
-
+        function renderLog() { gameLogContainer.innerHTML = gameState.log.map(log => `<p class="log-message pb-1 ${log.color}">[${log.timestamp}] ${log.message}</p>`).join(''); }
+        function toggleTimezone() { gameState.timeZone = gameState.timeZone === 'local' ? 'UTC' : 'local'; gameState.log.forEach(log => { log.timestamp = formatTimestamp(new Date(log.raw_timestamp)); }); updateUI(); }
+        function showJsonLog() { const logCopy = JSON.parse(JSON.stringify(gameState.log)); logCopy.forEach(log => { log.timestamp = formatTimestamp(new Date(log.raw_timestamp)); delete log.raw_timestamp; }); jsonLogTextarea.value = JSON.stringify(logCopy, null, 2); jsonLogModal.classList.remove('hidden'); }
         function hideJsonLog() { jsonLogModal.classList.add('hidden'); }
-
-        function copyLogToClipboard() {
-            jsonLogTextarea.select();
-            try {
-                document.execCommand('copy');
-                copyLogBtn.textContent = 'Copied!';
-                setTimeout(() => { copyLogBtn.textContent = 'Copy to Clipboard'; }, 2000);
-            } catch (err) {
-                console.error('Failed to copy log: ', err);
-                copyLogBtn.textContent = 'Error!';
-                setTimeout(() => { copyLogBtn.textContent = 'Copy to Clipboard'; }, 2000);
-            }
-        }
+        function copyLogToClipboard() { jsonLogTextarea.select(); try { document.execCommand('copy'); copyLogBtn.textContent = 'Copied!'; setTimeout(() => { copyLogBtn.textContent = 'Copy to Clipboard'; }, 2000); } catch (err) { console.error('Failed to copy log: ', err); copyLogBtn.textContent = 'Error!'; setTimeout(() => { copyLogBtn.textContent = 'Copy to Clipboard'; }, 2000); } }
 
         // --- EVENT LISTENERS ---
-        nextDayBtn.addEventListener('click', nextDay);
-        hireBtn.addEventListener('click', hireEmployee);
+        editCashBtn.addEventListener('click', updateCash);
         restartBtn.addEventListener('click', initGame);
+        nextDayBtn.addEventListener('click', nextDay);
         timezoneBtn.addEventListener('click', toggleTimezone);
         jsonLogBtn.addEventListener('click', showJsonLog);
         closeLogBtn.addEventListener('click', hideJsonLog);

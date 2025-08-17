@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8-Bit Restaurant Manager - Infographic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'VT323', monospace;
+            background-color: #1A1A1A;
+            color: #FFFFFF;
+            image-rendering: pixelated;
+        }
+        h1, h2, h3 {
+            font-family: 'Press Start 2P', cursive;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 1rem auto;
+            height: 280px;
+        }
+        .flow-step {
+            border: 2px dashed #FFD600;
+            background-color: #333333;
+        }
+        .flow-arrow {
+            color: #FFD600;
+            font-size: 2rem;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body class="bg-[#1A1A1A]">
+
+    <div class="max-w-2xl mx-auto p-8 bg-[#2C2C2C] border-8 border-[#444444]">
+
+        <header class="text-center mb-10">
+            <h1 class="text-4xl text-[#FFD600] mb-3">8-Bit Restaurant Manager</h1>
+            <p class="text-xl text-gray-300">Your Visual Guide to Success!</p>
+        </header>
+
+        <main class="space-y-10">
+
+            <section class="text-center">
+                <h2 class="text-2xl text-[#00E5FF] mb-4">Your Mission</h2>
+                <p class="text-lg mb-2">Grow your restaurant from a humble start to a culinary empire. Your goal is to reach:</p>
+                <div class="text-6xl font-bold text-[#76FF03] my-4 animate-pulse">$25,000</div>
+            </section>
+
+            <div class="border-t-4 border-dashed border-gray-600 my-8"></div>
+
+            <section>
+                <h2 class="text-2xl text-center text-[#00E5FF] mb-6">The Daily Grind</h2>
+                <div class="flex flex-col items-center space-y-2 text-center">
+                    <div class="flow-step p-4 rounded-md w-full">
+                        <h3 class="text-lg text-[#FFD600]">1. Prepare</h3>
+                        <p class="text-sm">Hire staff & buy ingredients.</p>
+                    </div>
+                    <div class="flow-arrow">&darr;</div>
+                    <div class="flow-step p-4 rounded-md w-full">
+                        <h3 class="text-lg text-[#FFD600]">2. Start Day</h3>
+                        <p class="text-sm">Pay salaries & serve customers.</p>
+                    </div>
+                    <div class="flow-arrow">&darr;</div>
+                    <div class="flow-step p-4 rounded-md w-full">
+                        <h3 class="text-lg text-[#FFD600]">3. Review</h3>
+                        <p class="text-sm">Analyze performance & plan ahead.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <div class="border-t-4 border-dashed border-gray-600 my-8"></div>
+
+            <section>
+                <h2 class="text-2xl text-center text-[#00E5FF] mb-4">Master Your Action Points (AP)</h2>
+                <p class="text-lg text-center mb-4">Your staff's daily output is measured in AP. Every order costs AP to fulfill. No AP, no sales!</p>
+                <div class="chart-container">
+                    <canvas id="employeeAPChart"></canvas>
+                </div>
+                <p class="text-sm text-center mt-2">Specialists (Cooks, Cashiers) provide focused AP, while Managers provide flexible **General AP** that can be used for any task.</p>
+            </section>
+
+            <div class="border-t-4 border-dashed border-gray-600 my-8"></div>
+
+            <section>
+                <h2 class="text-2xl text-center text-[#00E5FF] mb-4">Know Your Menu</h2>
+                <p class="text-lg text-center mb-4">Balance high-profit items with popular crowd-pleasers to maximize your daily revenue.</p>
+                <div class="chart-container">
+                    <canvas id="menuPopularityChart"></canvas>
+                </div>
+                 <p class="text-sm text-center mt-2">The bubble's size shows popularity, while its position shows price. Find the sweet spot!</p>
+            </section>
+
+        </main>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const employeeAPCtx = document.getElementById('employeeAPChart').getContext('2d');
+            new Chart(employeeAPCtx, {
+                type: 'bar',
+                data: {
+                    labels: [['Manager', '(General)'], 'Cook', 'Cashier', 'Driver'],
+                    datasets: [{
+                        label: 'Starting Action Points (Lvl 1)',
+                        data: [25, 10, 10, 10],
+                        backgroundColor: [
+                            '#FFD600', 
+                            '#FF3D00', 
+                            '#76FF03', 
+                            '#00E5FF'  
+                        ],
+                        borderColor: '#444444',
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } },
+                            grid: { color: 'rgba(255, 255, 255, 0.2)' }
+                        },
+                        x: {
+                            ticks: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const item = tooltipItems[0];
+                                    let label = item.chart.data.labels[item.dataIndex];
+                                    if (Array.isArray(label)) {
+                                      return label.join(' ');
+                                    } else {
+                                      return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const menuPopularityCtx = document.getElementById('menuPopularityChart').getContext('2d');
+            new Chart(menuPopularityCtx, {
+                type: 'bubble',
+                data: {
+                    datasets: [{
+                        label: 'Pizza',
+                        data: [{ x: 28, y: 10, r: 25 }],
+                        backgroundColor: '#FF3D00'
+                    }, {
+                        label: 'Burger',
+                        data: [{ x: 35, y: 9, r: 22 }],
+                        backgroundColor: '#FFD600'
+                    }, {
+                        label: 'Bread',
+                        data: [{ x: 12, y: 8, r: 20 }],
+                        backgroundColor: '#76FF03'
+                    }, {
+                        label: 'Gourmet Pizza',
+                        data: [{ x: 65, y: 4, r: 12 }],
+                        backgroundColor: '#00E5FF'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: { display: true, text: 'Popularity Score', color: '#FFFFFF', font: { size: 16, family: "'VT323', monospace" } },
+                            ticks: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } },
+                            grid: { color: 'rgba(255, 255, 255, 0.2)' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Price ($)', color: '#FFFFFF', font: { size: 16, family: "'VT323', monospace" } },
+                            ticks: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } },
+                            grid: { color: 'rgba(255, 255, 255, 0.2)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } } },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const item = tooltipItems[0];
+                                    let label = item.chart.data.datasets[item.datasetIndex].label;
+                                    if (Array.isArray(label)) {
+                                      return label.join(' ');
+                                    } else {
+                                      return label;
+                                    }
+                                },
+                                label: function(context) {
+                                    return `Price: $${context.parsed.x}, Popularity: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

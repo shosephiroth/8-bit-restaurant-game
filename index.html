@@ -198,6 +198,15 @@
                 driver: { name: 'Delivery Driver', salary: 80, levels: { 1: { ap: { delivery: 10 }, xp_needed: 0 }, 2: { ap: { delivery: 15 }, xp_needed: 100 }, 3: { ap: { delivery: 20 }, xp_needed: 300 } } },
                 dishwasher: { name: 'Dishwasher', salary: 60, levels: { 1: { ap: { service: 5 }, xp_needed: 0 }, 2: { ap: { service: 8 }, xp_needed: 100 }, 3: { ap: { service: 12 }, xp_needed: 300 } } }
             },
+            UPGRADES: {
+                oven: {
+                    1: { cost: 1000, description: "Dough cost -1 for baked goods." },
+                    2: { cost: 2500, description: "Flour cost -1 for cakes." },
+                    3: { cost: 5000, description: "Dough cost -2 for baked goods." },
+                    4: { cost: 7500, description: "Sugar cost -1 for cakes." },
+                    5: { cost: 15000, description: "All baked good ingredients -1." }
+                }
+            },
             UNLOCKS: [ { day: 3, ingredients: ['potato', 'beef', 'bun', 'lettuce'], menu: ['fries', 'burger'] }, { day: 5, ingredients: ['milkshake_mix'], menu: ['milkshake'] }, { day: 10, ingredients: ['fancy_cheese', 'bacon'], menu: [] }, { day: 14, menu: ['deluxe_burger'] }, { day: 30, menu: ['gourmet_pizza'] } ],
             OPEN_HOUR: 8,
             CLOSE_HOUR: 22
@@ -220,7 +229,7 @@
                 inventory: { stock: { flour: 20, sugar: 20, eggs: 15, cheese: 10, tomato: 10, dough: 10, potato: 0, beef: 0, bun: 0, lettuce: 0, milkshake_mix: 0, fancy_cheese: 0, bacon: 0 } },
                 unlocks: { ingredients: ['flour', 'sugar', 'eggs', 'cheese', 'tomato', 'dough'], menu: ['bread', 'cake', 'pizza'] },
                 settings: { maxCustomers: 50 },
-                upgrades: { oven: false, marketing_active_days: 0 },
+                upgrades: { ovenLevel: 0, marketing_active_days: 0 },
                 events: { critic_visit_today: false, critic_sales_target: 10 },
                 daily: { successfulSales: 0, deliveries: 0, purchases: [] },
                 lastDaySummary: { apUsed: 0, deliveries: 0, customersServed: 0 },
@@ -348,9 +357,24 @@
             if (!item) return false;
 
             let ingredientsCopy = {...item.ingredients};
-            if(gameState.upgrades.oven && (randomItemKey === 'pizza' || randomItemKey === 'gourmet_pizza' || randomItemKey === 'bread')) {
-                ingredientsCopy.dough = Math.max(0, ingredientsCopy.dough -1);
+            
+            // Apply oven upgrade benefits
+            const ovenLevel = gameState.upgrades.ovenLevel;
+            if (ovenLevel > 0) {
+                const bakedGoods = ['pizza', 'gourmet_pizza', 'bread', 'cake'];
+                if (bakedGoods.includes(randomItemKey)) {
+                    if (ovenLevel >= 1 && ingredientsCopy.dough) ingredientsCopy.dough = Math.max(0, ingredientsCopy.dough - 1);
+                    if (ovenLevel >= 2 && ingredientsCopy.flour) ingredientsCopy.flour = Math.max(0, ingredientsCopy.flour - 1);
+                    if (ovenLevel >= 3 && ingredientsCopy.dough) ingredientsCopy.dough = Math.max(0, ingredientsCopy.dough - 1); // total of -2
+                    if (ovenLevel >= 4 && ingredientsCopy.sugar) ingredientsCopy.sugar = Math.max(0, ingredientsCopy.sugar - 1);
+                    if (ovenLevel >= 5) {
+                        for(const ing in ingredientsCopy) {
+                            ingredientsCopy[ing] = Math.max(1, ingredientsCopy[ing] - 1);
+                        }
+                    }
+                }
             }
+
 
             let canMake = Object.entries(ingredientsCopy).every(([ingKey, amount]) => gameState.inventory.stock[ingKey] >= amount);
             if (!canMake) {
@@ -490,11 +514,16 @@
         }
 
         function purchaseUpgrade(type) {
-            if (type === 'oven' && !gameState.upgrades.oven && gameState.finances.cash >= 1000) {
-                gameState.finances.cash -= 1000;
-                gameState.upgrades.oven = true;
-                logMessage({type: 'UPGRADE', message: 'Purchased a Better Oven! Dough-based recipes are now cheaper.', color: 'text-purple-pixel'});
-                updateUI();
+            if (type === 'oven') {
+                const nextLevel = gameState.upgrades.ovenLevel + 1;
+                const upgradeData = GAME_DATA.UPGRADES.oven[nextLevel];
+                if (upgradeData && gameState.finances.cash >= upgradeData.cost) {
+                    gameState.finances.cash -= upgradeData.cost;
+                    gameState.upgrades.ovenLevel = nextLevel;
+                    gameState.daily.purchases.push({ name: `Oven Upgrade Lvl ${nextLevel}`, amount: 1, cost: upgradeData.cost });
+                    logMessage({type: 'UPGRADE', message: `Upgraded oven to Level ${nextLevel}!`, color: 'text-purple-pixel'});
+                    updateUI();
+                }
             } else if (type === 'marketing' && gameState.finances.cash >= 500) {
                 gameState.finances.cash -= 500;
                 gameState.upgrades.marketing_active_days += 3;
@@ -525,8 +554,16 @@
             summaryDeliveries.textContent = gameState.lastDaySummary.deliveries;
             summaryAP.textContent = gameState.lastDaySummary.apUsed;
 
-            upgradeOvenBtn.disabled = gameState.upgrades.oven;
-            if(gameState.upgrades.oven) upgradeOvenBtn.textContent = 'Oven Purchased';
+            // Update Oven Button
+            const nextOvenLevel = gameState.upgrades.ovenLevel + 1;
+            const nextOvenUpgrade = GAME_DATA.UPGRADES.oven[nextOvenLevel];
+            if (nextOvenUpgrade) {
+                upgradeOvenBtn.textContent = `Oven Lvl ${nextOvenLevel} ($${nextOvenUpgrade.cost})`;
+                upgradeOvenBtn.disabled = gameState.finances.cash < nextOvenUpgrade.cost;
+            } else {
+                upgradeOvenBtn.textContent = 'Oven Max Level';
+                upgradeOvenBtn.disabled = true;
+            }
             marketingBtn.disabled = gameState.finances.cash < 500;
 
             menuItemsContainer.innerHTML = gameState.unlocks.menu.map(key => {

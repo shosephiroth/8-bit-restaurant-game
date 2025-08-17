@@ -206,10 +206,14 @@
             gameState = {
                 day: 1,
                 finances: { cash: 5000, dailyRevenue: 0, dailyExpenses: 0 },
-                staff: { employees: [] },
+                staff: {
+                    employees: [
+                        { id: Date.now() + Math.random(), type: 'manager', name: GAME_DATA.EMPLOYEE_TYPES.manager.name, salary: GAME_DATA.EMPLOYEE_TYPES.manager.salary, level: 1, xp: 0 }
+                    ]
+                },
                 inventory: { stock: { flour: 20, sugar: 20, eggs: 15, cheese: 10, tomato: 10, dough: 10, potato: 0, beef: 0, bun: 0, lettuce: 0, milkshake_mix: 0, fancy_cheese: 0, bacon: 0 } },
                 unlocks: { ingredients: ['flour', 'sugar', 'eggs', 'cheese', 'tomato', 'dough'], menu: ['bread', 'cake', 'pizza'] },
-                settings: { maxCustomers: 10 },
+                settings: { maxCustomers: 50 },
                 upgrades: { oven: false, marketing_active_days: 0 },
                 events: { critic_visit_today: false, critic_sales_target: 10 },
                 daily: { successfulSales: 0, deliveries: 0 },

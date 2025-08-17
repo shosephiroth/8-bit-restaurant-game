@@ -498,6 +498,7 @@
             } else if (type === 'marketing' && gameState.finances.cash >= 500) {
                 gameState.finances.cash -= 500;
                 gameState.upgrades.marketing_active_days += 3;
+                gameState.daily.purchases.push({ name: 'Marketing Campaign', amount: 1, cost: 500 });
                  logMessage({type: 'UPGRADE', message: 'Launched a Marketing Campaign! Expect more customers for 3 days.', color: 'text-purple-pixel'});
                 updateUI();
             }

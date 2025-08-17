@@ -511,8 +511,11 @@
             timezoneDisplay.textContent = gameState.meta.timeZone.toUpperCase();
             cashDisplay.textContent = `$${gameState.finances.cash}`;
             revenueDisplay.textContent = `$${gameState.finances.dailyRevenue}`;
-            expensesDisplay.textContent = `$${gameState.finances.dailyExpenses}`;
-            cashDisplay.className = `text-2xl ${gameState.finances.cash >= 0 ? 'text-green-pixel' : 'text-red-pixel'}`;
+            
+            const purchaseTotal = gameState.daily.purchases.reduce((sum, p) => sum + p.cost, 0);
+            const totalDailyExpenses = gameState.finances.dailyExpenses + purchaseTotal;
+            expensesDisplay.textContent = `$${totalDailyExpenses}`;
+
             customerSlider.value = gameState.settings.maxCustomers;
             customerCountDisplay.textContent = gameState.settings.maxCustomers;
 

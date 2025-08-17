@@ -1,6 +1,6 @@
 # 8-bit-restaurant-game
 
-## Instructions here: 
+## Instructions here: https://github.com/shosephiroth/8-bit-restaurant-game/8-Bit Restaurant Manager_ Instruction Manual.md
 
 ## Installation
 

@@ -6,7 +6,7 @@
 
 ## Installation
 
-- Can be played locally by downloading the HTML File or visit here (insert live link here)
+- Can be played locally by downloading the HTML File or visit here: [https://shosephiroth.github.io/8-bit-restaurant-game/](https://shosephiroth.github.io/8-bit-restaurant-game/)
 
 ## Saving your progress
 

@@ -71,15 +71,9 @@
     </style>
 </head>
 <body class="p-4 md:p-8">
-
-    <div id="game-container" class="game-container max-w-7xl mx-auto p-4 rounded-lg shadow-lg">
-        <header class="text-center mb-6">
-            <h1 class="text-3xl md:text-4xl text-yellow-pixel">8-Bit Restaurant</h1>
-            <p class="text-sm text-gray-400">Your journey to culinary stardom!</p>
-        </header>
-
+    <nav class="sticky top-0 z-50 bg-[#303030] py-4 mb-6">
         <!-- Stats Bar -->
-        <div id="stats-bar" class="panel grid grid-cols-2 md:grid-cols-5 gap-4 p-4 mb-6 rounded-md text-center">
+        <div id="stats-bar" class="panel grid grid-cols-2 md:grid-cols-5 gap-4 p-4 rounded-md text-center max-w-7xl mx-auto">
             <div>
                 <p class="text-sm text-gray-400">Day</p>
                 <p id="day-display" class="text-2xl text-blue-pixel">1</p>
@@ -104,6 +98,13 @@
                 <p id="expenses-display" class="text-2xl text-red-pixel">$0</p>
             </div>
         </div>
+    </nav>
+
+    <div id="game-container" class="game-container max-w-7xl mx-auto p-4 rounded-lg shadow-lg">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl md:text-4xl text-yellow-pixel">8-Bit Restaurant</h1>
+            <p class="text-sm text-gray-400">Your journey to culinary stardom!</p>
+        </header>
         
         <!-- Summary Panel -->
         <div id="summary-panel" class="panel p-4 mb-6 rounded-md text-xs">
@@ -135,9 +136,9 @@
                     </div>
                     <div id="stock-items" class="space-y-3 mb-4"></div>
                     <div id="receipt-panel">
-                        <h3 class="text-sm mb-2 text-yellow-pixel">Daily Purchases</h3>
-                        <div id="receipt-items" class="text-xs space-y-1"></div>
-                        <p class="text-xs mt-2 border-t-2 border-dashed border-gray-500 pt-1">Total Spent: <span id="receipt-total" class="text-red-pixel">$0</span></p>
+                        <h3 class="text-sm mb-2 text-yellow-pixel">Daily Ledger</h3>
+                        <div id="receipt-items" class="text-xs space-y-1 h-24 overflow-y-auto pr-2"></div>
+                        <p class="text-xs mt-2 border-t-2 border-dashed border-gray-500 pt-1">Total Costs: <span id="receipt-total" class="text-red-pixel">$0</span></p>
                     </div>
                 </div>
                  <div id="settings-panel" class="panel p-4 rounded-md space-y-3">
@@ -221,7 +222,7 @@
                 settings: { maxCustomers: 50 },
                 upgrades: { oven: false, marketing_active_days: 0 },
                 events: { critic_visit_today: false, critic_sales_target: 10 },
-                daily: { successfulSales: 0, deliveries: 0 },
+                daily: { successfulSales: 0, deliveries: 0, purchases: [] },
                 lastDaySummary: { apUsed: 0, deliveries: 0, customersServed: 0 },
                 history: {},
                 meta: { isGameOver: false, gameStartDate: new Date().toISOString(), timeZone: 'local' }
@@ -246,6 +247,7 @@
             gameState.finances.dailyExpenses = 0;
             gameState.daily.successfulSales = 0;
             gameState.daily.deliveries = 0;
+            gameState.daily.purchases = [];
             
             const totalSalary = gameState.staff.employees.reduce((sum, emp) => sum + emp.salary, 0);
             if (totalSalary > 0) {
@@ -431,6 +433,7 @@
             const cost = ingredient.cost * amount;
             if (gameState.finances.cash >= cost) {
                 gameState.finances.cash -= cost; gameState.inventory.stock[ingredientKey] += amount;
+                gameState.daily.purchases.push({ name: ingredient.name, amount, cost });
                 logMessage({ type: 'INVENTORY', message: `Bought ${amount} ${ingredient.name} for $${cost}.`, color: 'text-blue-pixel', details: { item: ingredient.name, amount, cost, cashAfter: gameState.finances.cash, stockAfter: { ...gameState.inventory.stock } } });
                 updateUI();
             } else {
@@ -450,6 +453,7 @@
                 gameState.unlocks.ingredients.forEach(key => {
                     gameState.inventory.stock[key] += amount;
                 });
+                gameState.daily.purchases.push({ name: 'Bulk Purchase', amount, cost: totalCost });
                 logMessage({ type: 'INVENTORY', message: `Bulk purchased +${amount} of all ingredients for $${totalCost}.`, color: 'text-blue-pixel', details: { amount, cost: totalCost, cashAfter: gameState.finances.cash } });
                 updateUI();
             } else {
@@ -562,7 +566,29 @@
                 </div>`;
             }).join('');
             
+            updateReceiptUI();
             renderLog();
+        }
+
+        function updateReceiptUI() {
+            receiptItemsContainer.innerHTML = '';
+            let purchaseTotal = 0;
+            gameState.daily.purchases.forEach(purchase => {
+                const receiptItemEl = document.createElement('p');
+                receiptItemEl.textContent = `${purchase.amount}x ${purchase.name} - $${purchase.cost}`;
+                receiptItemsContainer.appendChild(receiptItemEl);
+                purchaseTotal += purchase.cost;
+            });
+
+            const laborCost = gameState.finances.dailyExpenses;
+            if (laborCost > 0) {
+                 const laborEl = document.createElement('p');
+                 laborEl.textContent = `Labor Costs - $${laborCost}`;
+                 receiptItemsContainer.appendChild(laborEl);
+            }
+
+            const totalCosts = purchaseTotal + laborCost;
+            receiptTotal.textContent = `$${totalCosts}`;
         }
 
         function formatLogEntryHTML(log) {

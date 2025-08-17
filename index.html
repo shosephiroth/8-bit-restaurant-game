@@ -3,724 +3,481 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>8-Bit Restaurant Manager</title>
+    <title>8-Bit Restaurant Manager - Combined</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    
     <style>
+        /* Global Styles */
         body {
+            background-color: #202020; /* Base background from the game */
+            color: #E0E0E0;
+            image-rendering: pixelated; /* A common style across all pages */
+        }
+
+        /* Main Navigation Bar */
+        .main-nav {
             font-family: 'Press Start 2P', cursive;
-            background-color: #202020;
-            color: #E0E0E0;
-            image-rendering: pixelated;
-        }
-        .game-container {
-            border: 4px solid #505050;
             background-color: #303030;
+            border-bottom: 4px solid #505050;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
         }
-        .panel {
-            border: 2px solid #505050;
-            background-color: #282828;
-        }
-        .btn {
-            border: 2px solid #505050;
-            background-color: #404040;
+        .main-nav a {
+            padding: 0.5rem 1rem;
+            margin: 0 0.5rem;
+            text-decoration: none;
             color: #E0E0E0;
-            text-transform: uppercase;
-            transition: all 0.1s ease-in-out;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
         }
-        .btn:hover:not(:disabled) {
-            background-color: #606060;
+        .main-nav a:hover {
+            color: #FFDC00; /* Yellow pixel color */
+            border-color: #FFDC00;
+        }
+        .main-nav a.active {
+            background-color: #505050;
             color: #FFFFFF;
-            transform: translateY(-2px);
-            box-shadow: 0 2px 0 #505050;
         }
-        .btn:active:not(:disabled) {
-            transform: translateY(0);
-            box-shadow: none;
+
+        /* --- STYLES FOR GAME PAGE (#game-page) --- */
+        #game-page {
+            font-family: 'Press Start 2P', cursive;
         }
-        .btn:disabled {
-            background-color: #333;
-            color: #666;
-            cursor: not-allowed;
+        #game-page .game-container { border: 4px solid #505050; background-color: #303030; }
+        #game-page .panel { border: 2px solid #505050; background-color: #282828; }
+        #game-page .btn { border: 2px solid #505050; background-color: #404040; color: #E0E0E0; text-transform: uppercase; transition: all 0.1s ease-in-out; }
+        #game-page .btn:hover:not(:disabled) { background-color: #606060; color: #FFFFFF; transform: translateY(-2px); box-shadow: 0 2px 0 #505050; }
+        #game-page .btn:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+        #game-page .btn:disabled { background-color: #333; color: #666; cursor: not-allowed; }
+        #game-page .btn-small { padding: 2px 6px; font-size: 10px; }
+        #game-page .log-message { border-bottom: 1px dashed #404040; }
+        #game-page .json-textarea, #game-page .custom-input { background-color: #1a1a1a; border: 2px solid #505050; color: #E0E0E0; font-family: monospace; }
+        #game-page .text-green-pixel { color: #32CD32; }
+        #game-page .text-red-pixel { color: #FF4136; }
+        #game-page .text-yellow-pixel { color: #FFDC00; }
+        #game-page .text-blue-pixel { color: #0074D9; }
+        #game-page .text-purple-pixel { color: #B10DC9; }
+        #game-page ::-webkit-scrollbar { width: 12px; }
+        #game-page ::-webkit-scrollbar-track { background: #282828; border-left: 2px solid #505050; }
+        #game-page ::-webkit-scrollbar-thumb { background: #505050; border: 2px solid #282828; }
+        #game-page ::-webkit-scrollbar-thumb:hover { background: #606060; }
+
+        /* --- STYLES FOR INFOGRAPHIC 1 PAGE (#infographic1-page) --- */
+        #infographic1-page {
+            font-family: 'VT323', monospace;
+            background-color: #2c2c2c;
+            color: #FFFFFF;
         }
-        .btn-small {
-            padding: 2px 6px;
-            font-size: 10px;
+        #infographic1-page h1, #infographic1-page h2, #infographic1-page h3 { font-family: 'Press Start 2P', cursive; }
+        #infographic1-page .card { background-color: #3e3e3e; border: 4px solid #555555; }
+        #infographic1-page .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { #infographic1-page .chart-container { height: 350px; } }
+        #infographic1-page .flow-step { border: 2px dashed #FFC107; background-color: #4a4a4a; }
+        #infographic1-page .flow-arrow { color: #FFC107; font-size: 2rem; }
+
+        /* --- STYLES FOR INFOGRAPHIC 2 PAGE (#infographic2-page) --- */
+        #infographic2-page {
+            font-family: 'VT323', monospace;
+            background-color: #1A1A1A;
+            color: #FFFFFF;
         }
-        .log-message {
-            border-bottom: 1px dashed #404040;
-        }
-        .json-textarea, .custom-input {
-            background-color: #1a1a1a;
-            border: 2px solid #505050;
-            color: #E0E0E0;
-            font-family: monospace;
-        }
-        .text-green-pixel { color: #32CD32; }
-        .text-red-pixel { color: #FF4136; }
-        .text-yellow-pixel { color: #FFDC00; }
-        .text-blue-pixel { color: #0074D9; }
-        .text-purple-pixel { color: #B10DC9; }
-        /* Custom scrollbar for a retro feel */
-        ::-webkit-scrollbar { width: 12px; }
-        ::-webkit-scrollbar-track { background: #282828; border-left: 2px solid #505050; }
-        ::-webkit-scrollbar-thumb { background: #505050; border: 2px solid #282828; }
-        ::-webkit-scrollbar-thumb:hover { background: #606060; }
+        #infographic2-page h1, #infographic2-page h2, #infographic2-page h3 { font-family: 'Press Start 2P', cursive; }
+        #infographic2-page .chart-container { position: relative; width: 100%; max-width: 500px; margin: 1rem auto; height: 280px; }
+        #infographic2-page .flow-step { border: 2px dashed #FFD600; background-color: #333333; }
+        #infographic2-page .flow-arrow { color: #FFD600; font-size: 2rem; line-height: 1; }
     </style>
 </head>
-<body class="p-4 md:p-8">
-    <nav class="sticky top-0 z-50 bg-[#303030] py-4 mb-6">
-        <!-- Stats Bar -->
-        <div id="stats-bar" class="panel grid grid-cols-2 md:grid-cols-5 gap-4 p-4 rounded-md text-center max-w-7xl mx-auto">
-            <div>
-                <p class="text-sm text-gray-400">Day</p>
-                <p id="day-display" class="text-2xl text-blue-pixel">1</p>
-            </div>
-             <div>
-                <p class="text-sm text-gray-400">Timezone</p>
-                <p id="timezone-display" class="text-lg text-blue-pixel">Local</p>
-            </div>
-            <div>
-                <p class="text-sm text-gray-400">Cash</p>
-                <div class="flex items-center justify-center gap-2">
-                    <p id="cash-display" class="text-2xl text-green-pixel">$5000</p>
-                    <button id="edit-cash-btn" class="btn btn-small rounded">Edit</button>
-                </div>
-            </div>
-            <div>
-                <p class="text-sm text-gray-400">Revenue</p>
-                <p id="revenue-display" class="text-2xl text-green-pixel">$0</p>
-            </div>
-            <div>
-                <p class="text-sm text-gray-400">Expenses</p>
-                <p id="expenses-display" class="text-2xl text-red-pixel">$0</p>
-            </div>
-        </div>
+<body class="p-0 sm:p-4">
+
+    <nav class="main-nav">
+        <a href="#game" id="nav-game" class="nav-link active">Game</a>
+        <a href="#guide1" id="nav-guide1" class="nav-link">Guide 1</a>
+        <a href="#guide2" id="nav-guide2" class="nav-link">Guide 2</a>
     </nav>
 
-    <div id="game-container" class="game-container max-w-7xl mx-auto p-4 rounded-lg shadow-lg">
-        <header class="text-center mb-6">
-            <h1 class="text-3xl md:text-4xl text-yellow-pixel">8-Bit Restaurant</h1>
-            <p class="text-sm text-gray-400">Your journey to culinary stardom!</p>
-        </header>
-        
-        <!-- Summary Panel -->
-        <div id="summary-panel" class="panel p-4 mb-6 rounded-md text-xs">
-            <h3 class="text-sm mb-2 text-yellow-pixel">Previous Day Summary</h3>
-            <div id="summary-content" class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <p>Customers Served: <span id="summary-customers" class="text-blue-pixel">0</span></p>
-                <p>Deliveries: <span id="summary-deliveries" class="text-blue-pixel">0</span></p>
-                <p>AP Used: <span id="summary-ap" class="text-blue-pixel">0</span></p>
-            </div>
-        </div>
-
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-1 space-y-6">
-                 <div id="capacity-panel" class="panel p-4 rounded-md space-y-2">
-                    <h2 class="text-lg mb-2 text-yellow-pixel">Daily Capacity</h2>
-                    <div id="ap-display" class="text-xs"></div>
-                </div>
-                <div id="menu-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Menu</h2><div id="menu-items" class="space-y-3"></div></div>
-                <div id="employees-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Manage Employees</h2><div id="employee-controls" class="space-y-2"></div></div>
-            </div>
-            <div class="lg:col-span-1 space-y-6">
-                <div id="stock-panel" class="panel p-4 rounded-md">
-                    <h2 class="text-lg mb-4 text-yellow-pixel">Ingredient Stock</h2>
-                    <div class="grid grid-cols-3 gap-2 mb-4 text-xs">
-                        <button class="btn py-1" onclick="bulkAddStock(100)">+100 All</button>
-                        <button class="btn py-1" onclick="bulkSetStock(0)">Set All 0</button>
-                        <button class="btn py-1" onclick="bulkSetStock(100)">Set All 100</button>
-                    </div>
-                    <div id="stock-items" class="space-y-3 mb-4"></div>
-                    <div id="receipt-panel">
-                        <h3 class="text-sm mb-2 text-yellow-pixel">Daily Ledger</h3>
-                        <div id="receipt-items" class="text-xs space-y-1 h-24 overflow-y-auto pr-2"></div>
-                        <p class="text-xs mt-2 border-t-2 border-dashed border-gray-500 pt-1">Total Costs: <span id="receipt-total" class="text-red-pixel">$0</span></p>
-                    </div>
-                </div>
-                 <div id="settings-panel" class="panel p-4 rounded-md space-y-3">
-                    <h2 class="text-lg mb-2 text-yellow-pixel">Restaurant Settings</h2>
+    <main>
+        <div id="game-page" class="page-content">
+            <nav class="sticky top-0 z-50 bg-[#303030] py-4 mb-6">
+                <div id="stats-bar" class="panel grid grid-cols-2 md:grid-cols-5 gap-4 p-4 rounded-md text-center max-w-7xl mx-auto">
                     <div>
-                        <label for="customer-slider" class="text-sm text-gray-400">Max Customers Next Day: <span id="customer-count-display">10</span></label>
-                        <input type="range" id="customer-slider" min="5" max="160" value="10" class="w-full">
+                        <p class="text-sm text-gray-400">Day</p>
+                        <p id="day-display" class="text-2xl text-blue-pixel">1</p>
                     </div>
-                </div>
-                <div id="upgrades-panel" class="panel p-4 rounded-md space-y-3">
-                    <h2 class="text-lg mb-2 text-yellow-pixel">Upgrades</h2>
-                    <button id="upgrade-oven-btn" class="btn w-full py-2 rounded-md text-xs">Better Oven ($1000)</button>
-                    <button id="marketing-btn" class="btn w-full py-2 rounded-md text-xs">Marketing ($500)</button>
-                </div>
-            </div>
-            <div class="lg:col-span-1 space-y-6">
-                 <div id="actions-panel" class="panel p-4 rounded-md space-y-3">
-                    <h2 class="text-lg mb-2 text-yellow-pixel">Actions</h2>
-                    <button id="next-day-btn" class="btn w-full py-3 rounded-md text-xl">Start Next Day</button>
-                    <button id="timezone-btn" class="btn w-full py-2 rounded-md">Toggle Timezone</button>
-                    <button id="json-log-btn" class="btn w-full py-2 rounded-md">View JSON Log</button>
-                    <button id="export-btn" class="btn w-full py-2 rounded-md">Export Save</button>
-                    <button id="import-btn" class="btn w-full py-2 rounded-md">Import Save</button>
-                    <input type="file" id="import-file-input" class="hidden" accept=".json">
-                    <button id="reset-game-btn" class="btn w-full py-2 rounded-md bg-red-800/50 border-red-500">Reset Game</button>
-                </div>
-                <div id="log-panel" class="panel p-4 rounded-md h-full"><h2 class="text-lg mb-4 text-yellow-pixel">Daily Log</h2><div id="game-log" class="h-96 overflow-y-auto pr-2 space-y-2 text-sm"></div></div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modals -->
-    <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-8 rounded-lg text-center max-w-sm"><h2 class="text-3xl text-red-pixel mb-4">Game Over</h2><p id="game-over-message" class="mb-6">You've run out of money!</p><button id="restart-btn" class="btn px-8 py-3 rounded-md text-lg">Restart Game</button></div></div>
-    <div id="json-log-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-6 rounded-lg text-center max-w-2xl w-full"><h2 class="text-2xl text-yellow-pixel mb-4">Full Game Log (JSON)</h2><textarea id="json-log-textarea" readonly class="json-textarea w-full h-64 p-2 rounded-md mb-4"></textarea><div class="flex gap-4"><button id="copy-log-btn" class="btn flex-1 py-2 rounded-md">Copy to Clipboard</button><button id="close-log-btn" class="btn flex-1 py-2 rounded-md">Close</button></div></div></div>
-    <div id="edit-cash-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-6 rounded-lg text-center max-w-sm w-full"><h2 class="text-2xl text-yellow-pixel mb-4">Edit Cash</h2><p class="text-sm text-gray-400 mb-4">Enter the new cash amount.</p><input type="number" id="cash-input" class="custom-input w-full p-2 rounded-md mb-4 text-center text-lg" /><p id="cash-error-msg" class="text-red-pixel h-4 mb-2 text-sm"></p><div class="flex gap-4"><button id="save-cash-btn" class="btn flex-1 py-2 rounded-md">Save</button><button id="cancel-cash-btn" class="btn flex-1 py-2 rounded-md">Cancel</button></div></div></div>
-    <div id="custom-buy-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-6 rounded-lg text-center max-w-sm w-full"><h2 class="text-2xl text-yellow-pixel mb-4">Buy Custom Amount</h2><p id="custom-buy-item-name" class="text-sm text-gray-400 mb-4">Buying...</p><input type="number" id="custom-buy-input" class="custom-input w-full p-2 rounded-md mb-4 text-center text-lg" placeholder="Enter amount" /><p id="custom-buy-error-msg" class="text-red-pixel h-4 mb-2 text-sm"></p><div class="flex gap-4"><button id="save-custom-buy-btn" class="btn flex-1 py-2 rounded-md">Buy</button><button id="cancel-custom-buy-btn" class="btn flex-1 py-2 rounded-md">Cancel</button></div></div></div>
-    <div id="reset-confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-6 rounded-lg text-center max-w-sm w-full"><h2 class="text-2xl text-red-pixel mb-4">Confirm Reset</h2><p class="text-sm text-gray-400 mb-4">Are you sure you want to restart? All progress will be lost.</p><div class="flex gap-4"><button id="confirm-reset-btn" class="btn flex-1 py-2 rounded-md bg-red-800/50 border-red-500">Confirm</button><button id="cancel-reset-btn" class="btn flex-1 py-2 rounded-md">Cancel</button></div></div></div>
-
-    <script>
-        // DOM Elements
-        const dayDisplay = document.getElementById('day-display'), timezoneDisplay = document.getElementById('timezone-display'), cashDisplay = document.getElementById('cash-display'), editCashBtn = document.getElementById('edit-cash-btn'), revenueDisplay = document.getElementById('revenue-display'), expensesDisplay = document.getElementById('expenses-display'), menuItemsContainer = document.getElementById('menu-items'), employeeControlsContainer = document.getElementById('employee-controls'), stockItemsContainer = document.getElementById('stock-items'), gameLogContainer = document.getElementById('game-log'), nextDayBtn = document.getElementById('next-day-btn'), timezoneBtn = document.getElementById('timezone-btn'), jsonLogBtn = document.getElementById('json-log-btn'), exportBtn = document.getElementById('export-btn'), importBtn = document.getElementById('import-btn'), importFileInput = document.getElementById('import-file-input'), customerSlider = document.getElementById('customer-slider'), customerCountDisplay = document.getElementById('customer-count-display'), upgradeOvenBtn = document.getElementById('upgrade-oven-btn'), marketingBtn = document.getElementById('marketing-btn'), resetGameBtn = document.getElementById('reset-game-btn'), apDisplay = document.getElementById('ap-display'), summaryCustomers = document.getElementById('summary-customers'), summaryDeliveries = document.getElementById('summary-deliveries'), summaryAP = document.getElementById('summary-ap'), receiptItemsContainer = document.getElementById('receipt-items'), receiptTotal = document.getElementById('receipt-total');
-        // Modals
-        const gameOverModal = document.getElementById('game-over-modal'), gameOverMessage = document.getElementById('game-over-message'), restartBtn = document.getElementById('restart-btn'), jsonLogModal = document.getElementById('json-log-modal'), jsonLogTextarea = document.getElementById('json-log-textarea'), copyLogBtn = document.getElementById('copy-log-btn'), closeLogBtn = document.getElementById('close-log-btn'), editCashModal = document.getElementById('edit-cash-modal'), cashInput = document.getElementById('cash-input'), saveCashBtn = document.getElementById('save-cash-btn'), cancelCashBtn = document.getElementById('cancel-cash-btn'), cashErrorMsg = document.getElementById('cash-error-msg'), customBuyModal = document.getElementById('custom-buy-modal'), customBuyItemName = document.getElementById('custom-buy-item-name'), customBuyInput = document.getElementById('custom-buy-input'), customBuyErrorMsg = document.getElementById('custom-buy-error-msg'), saveCustomBuyBtn = document.getElementById('save-custom-buy-btn'), cancelCustomBuyBtn = document.getElementById('cancel-custom-buy-btn'), resetConfirmModal = document.getElementById('reset-confirm-modal'), confirmResetBtn = document.getElementById('confirm-reset-btn'), cancelResetBtn = document.getElementById('cancel-reset-btn');
-
-        let gameState = {};
-        let currentCustomBuyIngredient = null;
-
-        // --- GAME DATA MODELS ---
-        const GAME_DATA = {
-            INGREDIENTS: { flour: { name: 'Flour', cost: 2 }, sugar: { name: 'Sugar', cost: 3 }, eggs: { name: 'Eggs', cost: 4 }, cheese: { name: 'Cheese', cost: 5 }, tomato: { name: 'Tomato', cost: 3 }, dough: { name: 'Dough', cost: 4 }, potato: { name: 'Potato', cost: 1 }, beef: { name: 'Beef', cost: 8 }, bun: { name: 'Bun', cost: 2 }, lettuce: { name: 'Lettuce', cost: 2 }, milkshake_mix: { name: 'Milkshake Mix', cost: 6 }, fancy_cheese: { name: 'Fancy Cheese', cost: 9}, bacon: { name: 'Bacon', cost: 7} },
-            MENU: { bread: { name: 'Bread', price: 12, ingredients: { flour: 2, eggs: 1 }, popularity: 8 }, cake: { name: 'Cake', price: 22, ingredients: { flour: 3, sugar: 4, eggs: 2 }, popularity: 6 }, pizza: { name: 'Pizza', price: 28, ingredients: { dough: 1, cheese: 2, tomato: 2 }, popularity: 10 }, fries: { name: 'Fries', price: 10, ingredients: { potato: 3 }, popularity: 9 }, burger: { name: 'Burger', price: 35, ingredients: { beef: 1, bun: 1, lettuce: 1 }, popularity: 9 }, milkshake: { name: 'Milkshake', price: 18, ingredients: { milkshake_mix: 1, sugar: 1 }, popularity: 7 }, deluxe_burger: { name: 'Deluxe Burger', price: 48, ingredients: { beef: 1, bun: 1, fancy_cheese: 1, bacon: 1 }, popularity: 5 }, gourmet_pizza: { name: 'Gourmet Pizza', price: 65, ingredients: { dough: 1, fancy_cheese: 2, bacon: 2, tomato: 1 }, popularity: 4 } },
-            EMPLOYEE_TYPES: { 
-                manager: { name: 'Manager', salary: 250, levels: { 1: { ap: { general: 25 }, xp_needed: 0 }, 2: { ap: { general: 30 }, xp_needed: 100 }, 3: { ap: { general: 50 }, xp_needed: 300 } } },
-                asst_manager: { name: 'Asst. Manager', salary: 180, levels: { 1: { ap: { general: 10 }, xp_needed: 0 }, 2: { ap: { general: 15 }, xp_needed: 100 }, 3: { ap: { general: 20 }, xp_needed: 300 } } },
-                cook: { name: 'Cook', salary: 120, levels: { 1: { ap: { cooking: 10 }, xp_needed: 0 }, 2: { ap: { cooking: 15 }, xp_needed: 100 }, 3: { ap: { cooking: 20 }, xp_needed: 300 } } },
-                cashier: { name: 'Cashier', salary: 70, levels: { 1: { ap: { service: 10 }, xp_needed: 0 }, 2: { ap: { service: 15 }, xp_needed: 100 }, 3: { ap: { service: 20 }, xp_needed: 300 } } },
-                driver: { name: 'Delivery Driver', salary: 80, levels: { 1: { ap: { delivery: 10 }, xp_needed: 0 }, 2: { ap: { delivery: 15 }, xp_needed: 100 }, 3: { ap: { delivery: 20 }, xp_needed: 300 } } },
-                dishwasher: { name: 'Dishwasher', salary: 60, levels: { 1: { ap: { service: 5 }, xp_needed: 0 }, 2: { ap: { service: 8 }, xp_needed: 100 }, 3: { ap: { service: 12 }, xp_needed: 300 } } }
-            },
-            UPGRADES: {
-                oven: {
-                    1: { cost: 1000, description: "Dough cost -1 for baked goods." },
-                    2: { cost: 2500, description: "Flour cost -1 for cakes." },
-                    3: { cost: 5000, description: "Dough cost -2 for baked goods." },
-                    4: { cost: 7500, description: "Sugar cost -1 for cakes." },
-                    5: { cost: 15000, description: "All baked good ingredients -1." }
-                }
-            },
-            UNLOCKS: [ { day: 3, ingredients: ['potato', 'beef', 'bun', 'lettuce'], menu: ['fries', 'burger'] }, { day: 5, ingredients: ['milkshake_mix'], menu: ['milkshake'] }, { day: 10, ingredients: ['fancy_cheese', 'bacon'], menu: [] }, { day: 14, menu: ['deluxe_burger'] }, { day: 30, menu: ['gourmet_pizza'] } ],
-            OPEN_HOUR: 8,
-            CLOSE_HOUR: 22
-        };
-        
-        // --- TIME & DATE HELPERS ---
-        function getCurrentGameDate(hour, minute = 0, second = 0) { const date = new Date(gameState.meta.gameStartDate); date.setDate(date.getDate() + gameState.day - 1); date.setHours(hour, minute, second, 0); return date; }
-        function formatTimestamp(date) { return gameState.meta.timeZone === 'local' ? date.toLocaleString() : date.toUTCString(); }
-
-        // --- CORE GAME FUNCTIONS ---
-        function initGame() {
-            gameState = {
-                day: 1,
-                finances: { cash: 5000, dailyRevenue: 0, dailyExpenses: 0 },
-                staff: {
-                    employees: [
-                        { id: Date.now() + Math.random(), type: 'manager', name: GAME_DATA.EMPLOYEE_TYPES.manager.name, salary: GAME_DATA.EMPLOYEE_TYPES.manager.salary, level: 1, xp: 0 }
-                    ]
-                },
-                inventory: { stock: { flour: 20, sugar: 20, eggs: 15, cheese: 10, tomato: 10, dough: 10, potato: 0, beef: 0, bun: 0, lettuce: 0, milkshake_mix: 0, fancy_cheese: 0, bacon: 0 } },
-                unlocks: { ingredients: ['flour', 'sugar', 'eggs', 'cheese', 'tomato', 'dough'], menu: ['bread', 'cake', 'pizza'] },
-                settings: { maxCustomers: 50 },
-                upgrades: { ovenLevel: 0, marketing_active_days: 0 },
-                events: { critic_visit_today: false, critic_sales_target: 10 },
-                daily: { successfulSales: 0, deliveries: 0, purchases: [] },
-                lastDaySummary: { apUsed: 0, deliveries: 0, customersServed: 0 },
-                history: {},
-                meta: { isGameOver: false, gameStartDate: new Date().toISOString(), timeZone: 'local' }
-            };
-            gameState.history[gameState.day] = [];
-            logMessage({ type: 'SYSTEM', message: "Welcome! Let's get cooking!", color: 'text-yellow-pixel' });
-            updateUI();
-            gameOverModal.classList.add('hidden');
-            jsonLogModal.classList.add('hidden');
-            editCashModal.classList.add('hidden');
-            customBuyModal.classList.add('hidden');
-            resetConfirmModal.classList.add('hidden');
-        }
-
-        function nextDay() {
-            if (gameState.meta.isGameOver) return;
-            
-            const startingAP = calculateActionPoints();
-            const totalAPAtStart = Object.values(startingAP).reduce((a, b) => a + b, 0);
-
-            gameState.finances.dailyRevenue = 0;
-            gameState.finances.dailyExpenses = 0;
-            gameState.daily.successfulSales = 0;
-            gameState.daily.deliveries = 0;
-            gameState.daily.purchases = [];
-            
-            const totalSalary = gameState.staff.employees.reduce((sum, emp) => sum + emp.salary, 0);
-            if (totalSalary > 0) {
-                gameState.finances.cash -= totalSalary;
-                gameState.finances.dailyExpenses += totalSalary;
-                logMessage({ type: 'EXPENSE', message: `Paid $${totalSalary} in salaries.`, color: 'text-red-pixel', details: { amount: totalSalary, reason: 'Salaries', cashAfter: gameState.finances.cash } }, getCurrentGameDate(GAME_DATA.OPEN_HOUR));
-            }
-
-            handleDailyEvents();
-
-            let ap = calculateActionPoints();
-            let totalPotentialCustomers = gameState.settings.maxCustomers;
-            if(gameState.upgrades.marketing_active_days > 0) {
-                totalPotentialCustomers = Math.ceil(totalPotentialCustomers * 1.5);
-                gameState.upgrades.marketing_active_days--;
-                logMessage({type: 'SYSTEM', message: `Marketing campaign boosts customers! ${gameState.upgrades.marketing_active_days} days left.`, color: 'text-purple-pixel'});
-            }
-
-            const customersToday = Math.floor(Math.random() * (totalPotentialCustomers + 1));
-            logMessage({type: 'SYSTEM', message: `${customersToday} customers are expected today.`, color: 'text-blue-pixel'}, getCurrentGameDate(GAME_DATA.OPEN_HOUR));
-
-            for (let i = 0; i < customersToday; i++) {
-                const isDelivery = Math.random() < 0.2;
-                sellMenuItem(getCurrentGameDate(GAME_DATA.OPEN_HOUR + Math.floor(Math.random() * (GAME_DATA.CLOSE_HOUR - GAME_DATA.OPEN_HOUR)), Math.floor(Math.random() * 60)), isDelivery, ap);
-            }
-
-            if (gameState.events.critic_visit_today) {
-                if (gameState.daily.successfulSales >= gameState.events.critic_sales_target) {
-                    const randomMenuItemKey = gameState.unlocks.menu[Math.floor(Math.random() * gameState.unlocks.menu.length)];
-                    GAME_DATA.MENU[randomMenuItemKey].popularity += 2;
-                    logMessage({ type: 'EVENT', message: `Success! The food critic was impressed. ${GAME_DATA.MENU[randomMenuItemKey].name} is now more popular!`, color: 'text-purple-pixel' });
-                } else {
-                    logMessage({ type: 'EVENT', message: `The food critic left unimpressed.`, color: 'text-red-pixel' });
-                }
-            }
-            
-            const totalAPAtEnd = Object.values(ap).reduce((a, b) => a + b, 0);
-            const apUsed = totalAPAtStart - totalAPAtEnd;
-
-            gameState.lastDaySummary = {
-                apUsed: apUsed,
-                deliveries: gameState.daily.deliveries,
-                customersServed: gameState.daily.successfulSales
-            };
-
-            gameState.staff.employees.forEach(emp => {
-                emp.xp += 10;
-                const nextLevelData = GAME_DATA.EMPLOYEE_TYPES[emp.type].levels[emp.level + 1];
-                if (nextLevelData && emp.xp >= nextLevelData.xp_needed) {
-                    emp.level++;
-                    logMessage({ type: 'SYSTEM', message: `${emp.name} has leveled up to level ${emp.level}!`, color: 'text-purple-pixel'});
-                }
-            });
-
-            logMessage({ type: 'SYSTEM', message: `Day ${gameState.day} summary: Revenue: $${gameState.finances.dailyRevenue}, Expenses: $${gameState.finances.dailyExpenses}, AP Used: ${apUsed}.`, color: 'text-yellow-pixel' }, getCurrentGameDate(GAME_DATA.CLOSE_HOUR));
-            
-            gameState.day++;
-            gameState.history[gameState.day] = [];
-            checkForUnlocks();
-
-            if (gameState.finances.cash < 0) endGame("You've run out of money and fallen into debt!");
-            else if (gameState.finances.cash > 25000) endGame("Congratulations! You've built a restaurant empire!");
-            
-            updateUI();
-        }
-        
-        function handleDailyEvents() {
-            gameState.events.critic_visit_today = false;
-            if (gameState.day > 5 && Math.random() < 0.2) {
-                gameState.events.critic_visit_today = true;
-                logMessage({ type: 'EVENT', message: `A food critic is visiting today! Serve ${gameState.events.critic_sales_target} customers to impress them!`, color: 'text-yellow-pixel' }, getCurrentGameDate(GAME_DATA.OPEN_HOUR, 1));
-            }
-        }
-
-        function checkForUnlocks() {
-            const unlock = GAME_DATA.UNLOCKS.find(u => u.day === gameState.day);
-            if (unlock) {
-                if (unlock.ingredients) unlock.ingredients.forEach(ing => { if(!gameState.unlocks.ingredients.includes(ing)) gameState.unlocks.ingredients.push(ing); });
-                if (unlock.menu) unlock.menu.forEach(item => { if(!gameState.unlocks.menu.includes(item)) gameState.unlocks.menu.push(item); });
-                logMessage({ type: 'UNLOCK', message: `LEVEL UP! ${GAME_DATA.UNLOCKS.find(ul=>ul.day===gameState.day).message || 'New items available!'}`, color: 'text-purple-pixel', details: { unlocked: unlock } }, getCurrentGameDate(GAME_DATA.OPEN_HOUR));
-            }
-        }
-
-        function getWeightedRandomMenuItem() {
-            const weightedMenu = [];
-            gameState.unlocks.menu.forEach(key => {
-                const item = GAME_DATA.MENU[key];
-                for(let i = 0; i < item.popularity; i++) {
-                    weightedMenu.push(key);
-                }
-            });
-            return weightedMenu[Math.floor(Math.random() * weightedMenu.length)];
-        }
-
-        function sellMenuItem(date, isDelivery, ap) {
-            const randomItemKey = getWeightedRandomMenuItem();
-            const item = GAME_DATA.MENU[randomItemKey];
-            if (!item) return false;
-
-            let ingredientsCopy = {...item.ingredients};
-            
-            // Apply oven upgrade benefits
-            const ovenLevel = gameState.upgrades.ovenLevel;
-            if (ovenLevel > 0) {
-                const bakedGoods = ['pizza', 'gourmet_pizza', 'bread', 'cake'];
-                if (bakedGoods.includes(randomItemKey)) {
-                    if (ovenLevel >= 1 && ingredientsCopy.dough) ingredientsCopy.dough = Math.max(0, ingredientsCopy.dough - 1);
-                    if (ovenLevel >= 2 && ingredientsCopy.flour) ingredientsCopy.flour = Math.max(0, ingredientsCopy.flour - 1);
-                    if (ovenLevel >= 3 && ingredientsCopy.dough) ingredientsCopy.dough = Math.max(0, ingredientsCopy.dough - 1); // total of -2
-                    if (ovenLevel >= 4 && ingredientsCopy.sugar) ingredientsCopy.sugar = Math.max(0, ingredientsCopy.sugar - 1);
-                    if (ovenLevel >= 5) {
-                        for(const ing in ingredientsCopy) {
-                            ingredientsCopy[ing] = Math.max(1, ingredientsCopy[ing] - 1);
-                        }
-                    }
-                }
-            }
-
-
-            let canMake = Object.entries(ingredientsCopy).every(([ingKey, amount]) => gameState.inventory.stock[ingKey] >= amount);
-            if (!canMake) {
-                logMessage({ type: 'SALE_FAIL', message: `Couldn't make ${item.name}. Out of ingredients!`, color: 'text-red-pixel', details: { item: item.name, missing: ingredientsCopy } }, date);
-                return false;
-            }
-
-            const requiredAP = { cooking: 1, service: isDelivery ? 0 : 1, delivery: isDelivery ? 1 : 0 };
-            if (!hasEnoughAP(ap, requiredAP)) {
-                let reason = !hasEnoughAP(ap, {cooking:1}) ? 'cooking' : (isDelivery ? 'delivery' : 'service');
-                logMessage({ type: 'SALE_FAIL', message: `Order for ${item.name} failed. Not enough ${reason} capacity.`, color: 'text-red-pixel', details: { item: item.name } }, date);
-                return false;
-            }
-            
-            const stockBefore = { ...gameState.inventory.stock };
-
-            deductAP(ap, requiredAP);
-            Object.entries(ingredientsCopy).forEach(([ingKey, amount]) => gameState.inventory.stock[ingKey] -= amount);
-            
-            let salePrice = item.price;
-            gameState.finances.cash += salePrice;
-            gameState.finances.dailyRevenue += salePrice;
-            
-            if (isDelivery) {
-                gameState.daily.deliveries++;
-            } else {
-                gameState.daily.successfulSales++;
-            }
-
-            logMessage({ type: 'SALE', message: `${isDelivery ? '[DELIVERY] ' : ''}Sold a ${item.name} for $${item.price}.`, color: 'text-green-pixel', details: { item: item.name, price: item.price, cashAfter: gameState.finances.cash, ingredientsUsed: ingredientsCopy, stockBefore, stockAfter: { ...gameState.inventory.stock } } }, date);
-            return true;
-        }
-
-        function calculateActionPoints() {
-            const ap = { cooking: 0, service: 0, delivery: 0, general: 0 };
-            gameState.staff.employees.forEach(emp => {
-                const levelData = GAME_DATA.EMPLOYEE_TYPES[emp.type].levels[emp.level];
-                for (const key in levelData.ap) {
-                    ap[key] += levelData.ap[key];
-                }
-            });
-            return ap;
-        }
-
-        function hasEnoughAP(ap, required) {
-            let availableGeneral = ap.general || 0;
-            for (const type in required) {
-                if (type !== 'general' && required[type] > 0) {
-                    const needed = required[type];
-                    const availableSpecific = ap[type] || 0;
-                    const takenFromSpecific = Math.min(needed, availableSpecific);
-                    const remainingNeeded = needed - takenFromSpecific;
-
-                    if (remainingNeeded > availableGeneral) {
-                        return false; 
-                    }
-                    availableGeneral -= remainingNeeded;
-                }
-            }
-            return true;
-        }
-
-        function deductAP(ap, required) {
-            for (const type in required) {
-                if (required[type] > 0) {
-                    const needed = required[type];
-                    const takenFromSpecific = Math.min(needed, ap[type] || 0);
-                    ap[type] -= takenFromSpecific;
-                    const remainingNeeded = needed - takenFromSpecific;
-                    if (remainingNeeded > 0) {
-                        ap.general -= remainingNeeded;
-                    }
-                }
-            }
-        }
-        
-        function buyIngredient(ingredientKey, amount) {
-            if (gameState.meta.isGameOver || amount <= 0) return;
-            const ingredient = GAME_DATA.INGREDIENTS[ingredientKey];
-            const cost = ingredient.cost * amount;
-            if (gameState.finances.cash >= cost) {
-                gameState.finances.cash -= cost; gameState.inventory.stock[ingredientKey] += amount;
-                gameState.daily.purchases.push({ name: ingredient.name, amount, cost });
-                logMessage({ type: 'INVENTORY', message: `Bought ${amount} ${ingredient.name} for $${cost}.`, color: 'text-blue-pixel', details: { item: ingredient.name, amount, cost, cashAfter: gameState.finances.cash, stockAfter: { ...gameState.inventory.stock } } });
-                updateUI();
-            } else {
-                logMessage({ type: 'INVENTORY_FAIL', message: `Not enough cash to buy ${ingredient.name}.`, color: 'text-red-pixel', details: { item: ingredient.name, cost } });
-                updateUI();
-            }
-        }
-
-        function bulkAddStock(amount) {
-            let totalCost = 0;
-            gameState.unlocks.ingredients.forEach(key => {
-                totalCost += GAME_DATA.INGREDIENTS[key].cost * amount;
-            });
-
-            if (gameState.finances.cash >= totalCost) {
-                gameState.finances.cash -= totalCost;
-                gameState.unlocks.ingredients.forEach(key => {
-                    gameState.inventory.stock[key] += amount;
-                });
-                gameState.daily.purchases.push({ name: 'Bulk Purchase', amount, cost: totalCost });
-                logMessage({ type: 'INVENTORY', message: `Bulk purchased +${amount} of all ingredients for $${totalCost}.`, color: 'text-blue-pixel', details: { amount, cost: totalCost, cashAfter: gameState.finances.cash } });
-                updateUI();
-            } else {
-                logMessage({ type: 'INVENTORY_FAIL', message: `Not enough cash for bulk purchase (cost: $${totalCost}).`, color: 'text-red-pixel' });
-            }
-        }
-
-        function bulkSetStock(amount) {
-            // No cost for testing
-            gameState.unlocks.ingredients.forEach(key => {
-                gameState.inventory.stock[key] = amount;
-            });
-            logMessage({ type: 'INVENTORY', message: `[TEST] Bulk set all stock to ${amount}.`, color: 'text-yellow-pixel' });
-            updateUI();
-        }
-        
-        function addEmployee(typeKey) {
-             if (gameState.meta.isGameOver || !GAME_DATA.EMPLOYEE_TYPES[typeKey]) return;
-             const empTmpl = GAME_DATA.EMPLOYEE_TYPES[typeKey];
-             const newEmployee = { id: Date.now() + Math.random(), type: typeKey, name: empTmpl.name, salary: empTmpl.salary, level: 1, xp: 0 };
-             gameState.staff.employees.push(newEmployee);
-             logMessage({ type: 'HIRE', message: `Hired a ${empTmpl.name} for $${empTmpl.salary}/day.`, color: 'text-blue-pixel', details: { employee: newEmployee } });
-             updateUI();
-        }
-        
-        function removeEmployee(typeKey) {
-            if (gameState.meta.isGameOver || !GAME_DATA.EMPLOYEE_TYPES[typeKey]) return;
-            const indexToRemove = gameState.staff.employees.findLastIndex(emp => emp.type === typeKey);
-            if (indexToRemove !== -1) {
-                const removedEmployee = gameState.staff.employees.splice(indexToRemove, 1)[0];
-                logMessage({ type: 'FIRE', message: `Removed a ${removedEmployee.name}.`, color: 'text-red-pixel', details: { employee: removedEmployee } });
-                updateUI();
-            }
-        }
-
-        function purchaseUpgrade(type) {
-            if (type === 'oven') {
-                const nextLevel = gameState.upgrades.ovenLevel + 1;
-                const upgradeData = GAME_DATA.UPGRADES.oven[nextLevel];
-                if (upgradeData && gameState.finances.cash >= upgradeData.cost) {
-                    gameState.finances.cash -= upgradeData.cost;
-                    gameState.upgrades.ovenLevel = nextLevel;
-                    gameState.daily.purchases.push({ name: `Oven Upgrade Lvl ${nextLevel}`, amount: 1, cost: upgradeData.cost });
-                    logMessage({type: 'UPGRADE', message: `Upgraded oven to Level ${nextLevel}!`, color: 'text-purple-pixel'});
-                    updateUI();
-                }
-            } else if (type === 'marketing' && gameState.finances.cash >= 500) {
-                gameState.finances.cash -= 500;
-                gameState.upgrades.marketing_active_days += 3;
-                gameState.daily.purchases.push({ name: 'Marketing Campaign', amount: 1, cost: 500 });
-                 logMessage({type: 'UPGRADE', message: 'Launched a Marketing Campaign! Expect more customers for 3 days.', color: 'text-purple-pixel'});
-                updateUI();
-            }
-        }
-
-        function endGame(message) { gameState.meta.isGameOver = true; gameOverMessage.textContent = message; gameOverModal.classList.remove('hidden'); }
-
-        // --- UI & MODAL FUNCTIONS ---
-        function updateUI() {
-            dayDisplay.textContent = gameState.day;
-            timezoneDisplay.textContent = gameState.meta.timeZone.toUpperCase();
-            cashDisplay.textContent = `$${gameState.finances.cash}`;
-            revenueDisplay.textContent = `$${gameState.finances.dailyRevenue}`;
-            
-            const purchaseTotal = gameState.daily.purchases.reduce((sum, p) => sum + p.cost, 0);
-            const totalDailyExpenses = gameState.finances.dailyExpenses + purchaseTotal;
-            expensesDisplay.textContent = `$${totalDailyExpenses}`;
-
-            customerSlider.value = gameState.settings.maxCustomers;
-            customerCountDisplay.textContent = gameState.settings.maxCustomers;
-
-            // Update Summary Panel
-            summaryCustomers.textContent = gameState.lastDaySummary.customersServed;
-            summaryDeliveries.textContent = gameState.lastDaySummary.deliveries;
-            summaryAP.textContent = gameState.lastDaySummary.apUsed;
-
-            // Update Oven Button
-            const nextOvenLevel = gameState.upgrades.ovenLevel + 1;
-            const nextOvenUpgrade = GAME_DATA.UPGRADES.oven[nextOvenLevel];
-            if (nextOvenUpgrade) {
-                upgradeOvenBtn.textContent = `Oven Lvl ${nextOvenLevel} ($${nextOvenUpgrade.cost})`;
-                upgradeOvenBtn.disabled = gameState.finances.cash < nextOvenUpgrade.cost;
-            } else {
-                upgradeOvenBtn.textContent = 'Oven Max Level';
-                upgradeOvenBtn.disabled = true;
-            }
-            marketingBtn.disabled = gameState.finances.cash < 500;
-
-            menuItemsContainer.innerHTML = gameState.unlocks.menu.map(key => {
-                const item = GAME_DATA.MENU[key];
-                return `<div><p class="font-bold">${item.name} - <span class="text-green-pixel">$${item.price}</span></p><p class="text-xs text-gray-400">Popularity: ${item.popularity}</p></div>`;
-            }).join('');
-
-            employeeControlsContainer.innerHTML = Object.entries(GAME_DATA.EMPLOYEE_TYPES).map(([key, emp]) => {
-                const count = gameState.staff.employees.filter(e => e.type === key).length;
-                return `
-                    <div class="grid grid-cols-3 items-center gap-2 text-xs">
-                        <span class="col-span-1">${emp.name} ($${emp.salary})</span>
-                        <div class="col-span-2 flex items-center justify-end gap-2">
-                            <button class="btn px-2 py-1" onclick="removeEmployee('${key}')" ${count === 0 ? 'disabled' : ''}>-</button>
-                            <span class="w-4 text-center">${count}</span>
-                            <button class="btn px-2 py-1" onclick="addEmployee('${key}')">+</button>
+                     <div>
+                        <p class="text-sm text-gray-400">Timezone</p>
+                        <p id="timezone-display" class="text-lg text-blue-pixel">Local</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Cash</p>
+                        <div class="flex items-center justify-center gap-2">
+                            <p id="cash-display" class="text-2xl text-green-pixel">$5000</p>
+                            <button id="edit-cash-btn" class="btn btn-small rounded">Edit</button>
                         </div>
                     </div>
-                `;
-            }).join('');
-
-            const currentAP = calculateActionPoints();
-            const totalAP = Object.values(currentAP).reduce((a, b) => a + b, 0);
-            apDisplay.innerHTML = `
-                <p>Cooking AP: ${currentAP.cooking}</p>
-                <p>Service AP: ${currentAP.service}</p>
-                <p>Delivery AP: ${currentAP.delivery}</p>
-                <p>General AP: ${currentAP.general}</p>
-                <p class="mt-2 text-yellow-pixel">Total AP: ${totalAP}</p>
-            `;
-
-            stockItemsContainer.innerHTML = gameState.unlocks.ingredients.map(key => {
-                const ingredient = GAME_DATA.INGREDIENTS[key];
-                return `<div class="grid grid-cols-5 items-center gap-2 text-xs">
-                    <span class="col-span-5 sm:col-span-1">${ingredient.name}: ${gameState.inventory.stock[key]}</span>
-                    <div class="col-span-5 sm:col-span-4 grid grid-cols-4 gap-1">
-                        <button class="btn py-1 rounded" onclick="buyIngredient('${key}', 10)">+10</button>
-                        <button class="btn py-1 rounded" onclick="buyIngredient('${key}', 100)">+100</button>
-                        <button class="btn py-1 rounded col-span-2" onclick="showCustomBuyModal('${key}')">Custom</button>
+                    <div>
+                        <p class="text-sm text-gray-400">Revenue</p>
+                        <p id="revenue-display" class="text-2xl text-green-pixel">$0</p>
                     </div>
-                </div>`;
-            }).join('');
-            
-            updateReceiptUI();
-            renderLog();
-        }
+                    <div>
+                        <p class="text-sm text-gray-400">Expenses</p>
+                        <p id="expenses-display" class="text-2xl text-red-pixel">$0</p>
+                    </div>
+                </div>
+            </nav>
+            <div id="game-container" class="game-container max-w-7xl mx-auto p-4 rounded-lg shadow-lg">
+                <header class="text-center mb-6">
+                    <h1 class="text-3xl md:text-4xl text-yellow-pixel">8-Bit Restaurant</h1>
+                    <p class="text-sm text-gray-400">Your journey to culinary stardom!</p>
+                </header>
+                <div id="summary-panel" class="panel p-4 mb-6 rounded-md text-xs">
+                    <h3 class="text-sm mb-2 text-yellow-pixel">Previous Day Summary</h3>
+                    <div id="summary-content" class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <p>Customers Served: <span id="summary-customers" class="text-blue-pixel">0</span></p>
+                        <p>Deliveries: <span id="summary-deliveries" class="text-blue-pixel">0</span></p>
+                        <p>AP Used: <span id="summary-ap" class="text-blue-pixel">0</span></p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 space-y-6">
+                        <div id="capacity-panel" class="panel p-4 rounded-md space-y-2"><h2 class="text-lg mb-2 text-yellow-pixel">Daily Capacity</h2><div id="ap-display" class="text-xs"></div></div>
+                        <div id="menu-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Menu</h2><div id="menu-items" class="space-y-3"></div></div>
+                        <div id="employees-panel" class="panel p-4 rounded-md"><h2 class="text-lg mb-4 text-yellow-pixel">Manage Employees</h2><div id="employee-controls" class="space-y-2"></div></div>
+                    </div>
+                    <div class="lg:col-span-1 space-y-6">
+                        <div id="stock-panel" class="panel p-4 rounded-md">
+                            <h2 class="text-lg mb-4 text-yellow-pixel">Ingredient Stock</h2>
+                            <div class="grid grid-cols-3 gap-2 mb-4 text-xs">
+                                <button class="btn py-1" onclick="bulkAddStock(100)">+100 All</button>
+                                <button class="btn py-1" onclick="bulkSetStock(0)">Set All 0</button>
+                                <button class="btn py-1" onclick="bulkSetStock(100)">Set All 100</button>
+                            </div>
+                            <div id="stock-items" class="space-y-3 mb-4"></div>
+                            <div id="receipt-panel">
+                                <h3 class="text-sm mb-2 text-yellow-pixel">Daily Ledger</h3>
+                                <div id="receipt-items" class="text-xs space-y-1 h-24 overflow-y-auto pr-2"></div>
+                                <p class="text-xs mt-2 border-t-2 border-dashed border-gray-500 pt-1">Total Costs: <span id="receipt-total" class="text-red-pixel">$0</span></p>
+                            </div>
+                        </div>
+                        <div id="settings-panel" class="panel p-4 rounded-md space-y-3">
+                            <h2 class="text-lg mb-2 text-yellow-pixel">Restaurant Settings</h2>
+                            <div><label for="customer-slider" class="text-sm text-gray-400">Max Customers Next Day: <span id="customer-count-display">10</span></label><input type="range" id="customer-slider" min="5" max="160" value="10" class="w-full"></div>
+                        </div>
+                        <div id="upgrades-panel" class="panel p-4 rounded-md space-y-3">
+                            <h2 class="text-lg mb-2 text-yellow-pixel">Upgrades</h2>
+                            <button id="upgrade-oven-btn" class="btn w-full py-2 rounded-md text-xs">Better Oven ($1000)</button>
+                            <button id="marketing-btn" class="btn w-full py-2 rounded-md text-xs">Marketing ($500)</button>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1 space-y-6">
+                        <div id="actions-panel" class="panel p-4 rounded-md space-y-3">
+                            <h2 class="text-lg mb-2 text-yellow-pixel">Actions</h2>
+                            <button id="next-day-btn" class="btn w-full py-3 rounded-md text-xl">Start Next Day</button>
+                            <button id="timezone-btn" class="btn w-full py-2 rounded-md">Toggle Timezone</button>
+                            <button id="json-log-btn" class="btn w-full py-2 rounded-md">View JSON Log</button>
+                            <button id="export-btn" class="btn w-full py-2 rounded-md">Export Save</button>
+                            <button id="import-btn" class="btn w-full py-2 rounded-md">Import Save</button>
+                            <input type="file" id="import-file-input" class="hidden" accept=".json">
+                            <button id="reset-game-btn" class="btn w-full py-2 rounded-md bg-red-800/50 border-red-500">Reset Game</button>
+                        </div>
+                        <div id="log-panel" class="panel p-4 rounded-md h-full"><h2 class="text-lg mb-4 text-yellow-pixel">Daily Log</h2><div id="game-log" class="h-96 overflow-y-auto pr-2 space-y-2 text-sm"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-8 rounded-lg text-center max-w-sm"><h2 class="text-3xl text-red-pixel mb-4">Game Over</h2><p id="game-over-message" class="mb-6">You've run out of money!</p><button id="restart-btn" class="btn px-8 py-3 rounded-md text-lg">Restart Game</button></div></div>
+            <div id="json-log-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-6 rounded-lg text-center max-w-2xl w-full"><h2 class="text-2xl text-yellow-pixel mb-4">Full Game Log (JSON)</h2><textarea id="json-log-textarea" readonly class="json-textarea w-full h-64 p-2 rounded-md mb-4"></textarea><div class="flex gap-4"><button id="copy-log-btn" class="btn flex-1 py-2 rounded-md">Copy to Clipboard</button><button id="close-log-btn" class="btn flex-1 py-2 rounded-md">Close</button></div></div></div>
+            <div id="edit-cash-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-6 rounded-lg text-center max-w-sm w-full"><h2 class="text-2xl text-yellow-pixel mb-4">Edit Cash</h2><p class="text-sm text-gray-400 mb-4">Enter the new cash amount.</p><input type="number" id="cash-input" class="custom-input w-full p-2 rounded-md mb-4 text-center text-lg" /><p id="cash-error-msg" class="text-red-pixel h-4 mb-2 text-sm"></p><div class="flex gap-4"><button id="save-cash-btn" class="btn flex-1 py-2 rounded-md">Save</button><button id="cancel-cash-btn" class="btn flex-1 py-2 rounded-md">Cancel</button></div></div></div>
+            <div id="custom-buy-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-6 rounded-lg text-center max-w-sm w-full"><h2 class="text-2xl text-yellow-pixel mb-4">Buy Custom Amount</h2><p id="custom-buy-item-name" class="text-sm text-gray-400 mb-4">Buying...</p><input type="number" id="custom-buy-input" class="custom-input w-full p-2 rounded-md mb-4 text-center text-lg" placeholder="Enter amount" /><p id="custom-buy-error-msg" class="text-red-pixel h-4 mb-2 text-sm"></p><div class="flex gap-4"><button id="save-custom-buy-btn" class="btn flex-1 py-2 rounded-md">Buy</button><button id="cancel-custom-buy-btn" class="btn flex-1 py-2 rounded-md">Cancel</button></div></div></div>
+            <div id="reset-confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"><div class="panel p-6 rounded-lg text-center max-w-sm w-full"><h2 class="text-2xl text-red-pixel mb-4">Confirm Reset</h2><p class="text-sm text-gray-400 mb-4">Are you sure you want to restart? All progress will be lost.</p><div class="flex gap-4"><button id="confirm-reset-btn" class="btn flex-1 py-2 rounded-md bg-red-800/50 border-red-500">Confirm</button><button id="cancel-reset-btn" class="btn flex-1 py-2 rounded-md">Cancel</button></div></div></div>
+        </div>
 
-        function updateReceiptUI() {
-            receiptItemsContainer.innerHTML = '';
-            let purchaseTotal = 0;
-            gameState.daily.purchases.forEach(purchase => {
-                const receiptItemEl = document.createElement('p');
-                receiptItemEl.textContent = `${purchase.amount}x ${purchase.name} - $${purchase.cost}`;
-                receiptItemsContainer.appendChild(receiptItemEl);
-                purchaseTotal += purchase.cost;
+        <div id="infographic1-page" class="page-content" style="display: none;">
+             <div class="max-w-5xl mx-auto p-4 sm:p-8">
+                <header class="text-center mb-12">
+                    <h1 class="text-3xl md:text-5xl text-[#FFC107] mb-4">8-Bit Restaurant Manager</h1>
+                    <p class="text-xl text-gray-300">Your Visual Guide to Culinary Conquest!</p>
+                </header>
+                <main class="space-y-12">
+                    <section class="card rounded-lg p-6 text-center shadow-lg">
+                        <h2 class="text-2xl text-[#2196F3] mb-4">Your Mission</h2>
+                        <p class="text-lg mb-4">Your goal is to build a restaurant empire from the ground up. Manage your staff, stock your pantry, and serve customers to reach the ultimate goal of:</p>
+                        <div class="text-6xl font-bold text-[#4CAF50] my-6 animate-pulse">$25,000</div>
+                        <p class="text-lg">But be careful! If your cash drops below zero, it's game over.</p>
+                    </section>
+                    <section class="card rounded-lg p-6 shadow-lg">
+                        <h2 class="text-2xl text-center text-[#2196F3] mb-6">The Daily Grind</h2>
+                        <p class="text-lg text-center mb-8">Success is built one day at a time. Each day follows a simple but crucial loop. Master this cycle to maximize your profits.</p>
+                        <div class="flex flex-col md:flex-row items-center justify-around space-y-4 md:space-y-0 md:space-x-4 text-center">
+                            <div class="flow-step p-4 rounded-md w-48"><h3 class="text-lg text-[#FFC107]">1. Prepare</h3><p class="text-sm">Hire staff & buy ingredients.</p></div>
+                            <div class="flow-arrow hidden md:block">&rarr;</div><div class="flow-arrow md:hidden">&darr;</div>
+                            <div class="flow-step p-4 rounded-md w-48"><h3 class="text-lg text-[#FFC107]">2. Start Day</h3><p class="text-sm">Pay salaries & open doors.</p></div>
+                            <div class="flow-arrow hidden md:block">&rarr;</div><div class="flow-arrow md:hidden">&darr;</div>
+                            <div class="flow-step p-4 rounded-md w-48"><h3 class="text-lg text-[#FFC107]">3. Serve</h3><p class="text-sm">Fulfill customer orders.</p></div>
+                            <div class="flow-arrow hidden md:block">&rarr;</div><div class="flow-arrow md:hidden">&darr;</div>
+                            <div class="flow-step p-4 rounded-md w-48"><h3 class="text-lg text-[#FFC107]">4. Review</h3><p class="text-sm">Analyze performance.</p></div>
+                        </div>
+                    </section>
+                    <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="card rounded-lg p-6 shadow-lg">
+                            <h2 class="text-2xl text-center text-[#2196F3] mb-4">Your Most Valuable Asset</h2>
+                            <p class="text-lg mb-4">You can't do it alone! Each employee generates <strong>Action Points (AP)</strong>, the resource needed to get things done. Choosing the right team is key to success.</p>
+                            <div class="chart-container"><canvas id="employeeAPChart1"></canvas></div>
+                            <p class="text-sm text-center mt-4">This chart shows the starting AP for different roles. Managers are flexible, while others are specialists.</p>
+                        </div>
+                        <div class="card rounded-lg p-6 shadow-lg">
+                            <h2 class="text-2xl text-center text-[#2196F3] mb-4">The Action Point Economy</h2>
+                            <p class="text-lg mb-4">Every order costs AP to complete. You need <strong>Cooking AP</strong> to make the food, and either <strong>Service AP</strong> (for dine-in) or <strong>Delivery AP</strong> to get it to the customer. Run out of AP, and you'll miss sales!</p>
+                            <div class="space-y-4 text-lg p-4">
+                                <div class="flex items-center"><span class="text-[#4CAF50] w-1/2">Cooks, Cashiers, Drivers</span><span class="mx-4">&rarr;</span><span class="text-[#FFC107] w-1/2">Generate Specialist AP</span></div>
+                                <div class="flex items-center"><span class="text-[#4CAF50] w-1/2">Managers</span><span class="mx-4">&rarr;</span><span class="text-[#FFC107] w-1/2">Generate General AP</span></div>
+                                <div class="border-t-2 border-dashed border-gray-500 my-4"></div>
+                                <div class="flex items-center"><span class="text-[#FFC107] w-1/2">Specialist + General AP</span><span class="mx-4">&rarr;</span><span class="text-[#FF5722] w-1/2">Fulfill Customer Orders</span></div>
+                            </div>
+                            <p class="text-sm text-center mt-4">Managers are your wildcards! Their <strong>General AP</strong> can be used to cover any task, making them essential for a smooth operation.</p>
+                        </div>
+                    </section>
+                    <section class="card rounded-lg p-6 shadow-lg">
+                        <h2 class="text-2xl text-center text-[#2196F3] mb-4">What's On The Menu?</h2>
+                        <p class="text-lg text-center mb-4">Not all dishes are created equal. Some are cheap and popular, while others are expensive but ordered less frequently. Balancing your menu and inventory based on price vs. popularity is crucial for maximizing profit.</p>
+                        <div class="chart-container"><canvas id="menuPopularityChart1"></canvas></div>
+                        <p class="text-sm text-center mt-4">The size of the bubble indicates its popularity. Pizza is a crowd-pleaser, but the Gourmet Pizza is a rare, high-profit sale.</p>
+                    </section>
+                </main>
+            </div>
+        </div>
+
+        <div id="infographic2-page" class="page-content" style="display: none;">
+             <div class="max-w-2xl mx-auto p-8 bg-[#2C2C2C] border-8 border-[#444444]">
+                <header class="text-center mb-10">
+                    <h1 class="text-4xl text-[#FFD600] mb-3">8-Bit Restaurant Manager</h1>
+                    <p class="text-xl text-gray-300">Your Visual Guide to Success!</p>
+                </header>
+                <main class="space-y-10">
+                    <section class="text-center">
+                        <h2 class="text-2xl text-[#00E5FF] mb-4">Your Mission</h2>
+                        <p class="text-lg mb-2">Grow your restaurant from a humble start to a culinary empire. Your goal is to reach:</p>
+                        <div class="text-6xl font-bold text-[#76FF03] my-4 animate-pulse">$25,000</div>
+                    </section>
+                    <div class="border-t-4 border-dashed border-gray-600 my-8"></div>
+                    <section>
+                        <h2 class="text-2xl text-center text-[#00E5FF] mb-6">The Daily Grind</h2>
+                        <div class="flex flex-col items-center space-y-2 text-center">
+                            <div class="flow-step p-4 rounded-md w-full"><h3 class="text-lg text-[#FFD600]">1. Prepare</h3><p class="text-sm">Hire staff & buy ingredients.</p></div>
+                            <div class="flow-arrow">&darr;</div>
+                            <div class="flow-step p-4 rounded-md w-full"><h3 class="text-lg text-[#FFD600]">2. Start Day</h3><p class="text-sm">Pay salaries & serve customers.</p></div>
+                            <div class="flow-arrow">&darr;</div>
+                            <div class="flow-step p-4 rounded-md w-full"><h3 class="text-lg text-[#FFD600]">3. Review</h3><p class="text-sm">Analyze performance & plan ahead.</p></div>
+                        </div>
+                    </section>
+                    <div class="border-t-4 border-dashed border-gray-600 my-8"></div>
+                    <section>
+                        <h2 class="text-2xl text-center text-[#00E5FF] mb-4">Master Your Action Points (AP)</h2>
+                        <p class="text-lg text-center mb-4">Your staff's daily output is measured in AP. Every order costs AP to fulfill. No AP, no sales!</p>
+                        <div class="chart-container"><canvas id="employeeAPChart2"></canvas></div>
+                        <p class="text-sm text-center mt-2">Specialists (Cooks, Cashiers) provide focused AP, while Managers provide flexible <strong>General AP</strong> that can be used for any task.</p>
+                    </section>
+                    <div class="border-t-4 border-dashed border-gray-600 my-8"></div>
+                    <section>
+                        <h2 class="text-2xl text-center text-[#00E5FF] mb-4">Know Your Menu</h2>
+                        <p class="text-lg text-center mb-4">Balance high-profit items with popular crowd-pleasers to maximize your daily revenue.</p>
+                        <div class="chart-container"><canvas id="menuPopularityChart2"></canvas></div>
+                        <p class="text-sm text-center mt-2">The bubble's size shows popularity, while its position shows price. Find the sweet spot!</p>
+                    </section>
+                </main>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        // --- PAGE NAVIGATION LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pageContents = document.querySelectorAll('.page-content');
+
+            const switchPage = (targetId) => {
+                pageContents.forEach(page => {
+                    page.style.display = page.id === targetId ? 'block' : 'none';
+                });
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.id === `nav-${targetId.split('-')[0]}`);
+                });
+            };
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetPage = e.target.getAttribute('href').substring(1); // "game", "guide1", etc
+                    switchPage(`${targetPage}-page`);
+                    window.location.hash = targetPage;
+                });
             });
 
-            const laborCost = gameState.finances.dailyExpenses;
-            if (laborCost > 0) {
-                 const laborEl = document.createElement('p');
-                 laborEl.textContent = `Labor Costs - $${laborCost}`;
-                 receiptItemsContainer.appendChild(laborEl);
+            // Handle initial page load based on hash
+            const currentHash = window.location.hash.substring(1);
+            if (currentHash === 'guide1' || currentHash === 'guide2') {
+                switchPage(`${currentHash}-page`);
+            } else {
+                switchPage('game-page');
             }
+        });
 
-            const totalCosts = purchaseTotal + laborCost;
-            receiptTotal.textContent = `$${totalCosts}`;
-        }
 
-        function formatLogEntryHTML(log) {
-            let detailsHTML = '';
-            const details = log.details || {};
+        // --- GAME SCRIPT (from index.html) ---
+        // Wrapped in a self-executing function to avoid global scope pollution
+        (() => {
+            // NOTE: Check if elements exist before assigning to avoid errors when on other pages
+            if (!document.getElementById('day-display')) return; // Exit if game DOM isn't present
+            
+            // DOM Elements
+            const dayDisplay = document.getElementById('day-display'), timezoneDisplay = document.getElementById('timezone-display'), cashDisplay = document.getElementById('cash-display'), editCashBtn = document.getElementById('edit-cash-btn'), revenueDisplay = document.getElementById('revenue-display'), expensesDisplay = document.getElementById('expenses-display'), menuItemsContainer = document.getElementById('menu-items'), employeeControlsContainer = document.getElementById('employee-controls'), stockItemsContainer = document.getElementById('stock-items'), gameLogContainer = document.getElementById('game-log'), nextDayBtn = document.getElementById('next-day-btn'), timezoneBtn = document.getElementById('timezone-btn'), jsonLogBtn = document.getElementById('json-log-btn'), exportBtn = document.getElementById('export-btn'), importBtn = document.getElementById('import-btn'), importFileInput = document.getElementById('import-file-input'), customerSlider = document.getElementById('customer-slider'), customerCountDisplay = document.getElementById('customer-count-display'), upgradeOvenBtn = document.getElementById('upgrade-oven-btn'), marketingBtn = document.getElementById('marketing-btn'), resetGameBtn = document.getElementById('reset-game-btn'), apDisplay = document.getElementById('ap-display'), summaryCustomers = document.getElementById('summary-customers'), summaryDeliveries = document.getElementById('summary-deliveries'), summaryAP = document.getElementById('summary-ap'), receiptItemsContainer = document.getElementById('receipt-items'), receiptTotal = document.getElementById('receipt-total');
+            // Modals
+            const gameOverModal = document.getElementById('game-over-modal'), gameOverMessage = document.getElementById('game-over-message'), restartBtn = document.getElementById('restart-btn'), jsonLogModal = document.getElementById('json-log-modal'), jsonLogTextarea = document.getElementById('json-log-textarea'), copyLogBtn = document.getElementById('copy-log-btn'), closeLogBtn = document.getElementById('close-log-btn'), editCashModal = document.getElementById('edit-cash-modal'), cashInput = document.getElementById('cash-input'), saveCashBtn = document.getElementById('save-cash-btn'), cancelCashBtn = document.getElementById('cancel-cash-btn'), cashErrorMsg = document.getElementById('cash-error-msg'), customBuyModal = document.getElementById('custom-buy-modal'), customBuyItemName = document.getElementById('custom-buy-item-name'), customBuyInput = document.getElementById('custom-buy-input'), customBuyErrorMsg = document.getElementById('custom-buy-error-msg'), saveCustomBuyBtn = document.getElementById('save-custom-buy-btn'), cancelCustomBuyBtn = document.getElementById('cancel-custom-buy-btn'), resetConfirmModal = document.getElementById('reset-confirm-modal'), confirmResetBtn = document.getElementById('confirm-reset-btn'), cancelResetBtn = document.getElementById('cancel-reset-btn');
 
-            switch (log.type) {
-                case 'SALE':
-                    if (details.ingredientsUsed) {
-                        const ingredientsText = Object.entries(details.ingredientsUsed).map(([key, amount]) => `${amount} ${GAME_DATA.INGREDIENTS[key].name}`).join(', ');
-                        detailsHTML = `<p class="text-xs text-gray-400 pl-4">Ingredients: ${ingredientsText}</p><p class="text-xs text-gray-400 pl-4">Cash after sale: $${details.cashAfter}</p>`;
-                    }
-                    break;
-                case 'INVENTORY': detailsHTML = `<p class="text-xs text-gray-400 pl-4">Cash after purchase: $${details.cashAfter}</p>`; break;
-                case 'EXPENSE': detailsHTML = `<p class="text-xs text-gray-400 pl-4">Cash after expense: $${details.cashAfter}</p>`; break;
-            }
-            return `<div class="log-message pb-2"><p class="${log.color}">[${log.timestamp}] ${log.message}</p>${detailsHTML}</div>`;
-        }
+            let gameState = {};
+            let currentCustomBuyIngredient = null;
 
-        function logMessage(logObject, date = new Date()) { logObject.timestamp = formatTimestamp(date); logObject.raw_timestamp = date.toISOString(); if (!gameState.history[gameState.day]) gameState.history[gameState.day] = []; gameState.history[gameState.day].unshift(logObject); if(document.body.contains(gameLogContainer)) renderLog(); }
-        function renderLog() { const currentLog = gameState.history[gameState.day] || []; gameLogContainer.innerHTML = currentLog.map(formatLogEntryHTML).join(''); }
-        function toggleTimezone() { gameState.meta.timeZone = gameState.meta.timeZone === 'local' ? 'UTC' : 'local'; updateUI(); }
-        function showJsonLog() { const logCopy = JSON.parse(JSON.stringify(gameState.history)); for(const day in logCopy) { logCopy[day].forEach(log => { log.timestamp = formatTimestamp(new Date(log.raw_timestamp)); delete log.raw_timestamp; }); } jsonLogTextarea.value = JSON.stringify(logCopy, null, 2); jsonLogModal.classList.remove('hidden'); }
-        function hideJsonLog() { jsonLogModal.classList.add('hidden'); }
-        
-        function showCashModal() { cashInput.value = gameState.finances.cash; cashErrorMsg.textContent = ''; editCashModal.classList.remove('hidden'); cashInput.focus(); }
-        function hideCashModal() { editCashModal.classList.add('hidden'); }
-        function saveNewCash() {
-            const currentCash = gameState.finances.cash, newCashStr = cashInput.value, newCash = parseInt(newCashStr, 10);
-            if (!isNaN(newCash) && newCash >= 0) {
-                gameState.finances.cash = newCash;
-                logMessage({ type: 'MANUAL_EDIT', message: `Cash manually updated from $${currentCash} to $${newCash}.`, color: 'text-yellow-pixel', details: { from: currentCash, to: newCash } });
-                updateUI(); hideCashModal();
-            } else { cashErrorMsg.textContent = "Invalid number!"; setTimeout(() => { cashErrorMsg.textContent = ''; }, 2000); }
-        }
-        
-        function showCustomBuyModal(ingredientKey) { currentCustomBuyIngredient = ingredientKey; customBuyItemName.textContent = `Buying ${GAME_DATA.INGREDIENTS[ingredientKey].name}`; customBuyInput.value = ''; customBuyErrorMsg.textContent = ''; customBuyModal.classList.remove('hidden'); customBuyInput.focus(); }
-        function hideCustomBuyModal() { customBuyModal.classList.add('hidden'); }
-        function saveCustomBuy() {
-            const amountStr = customBuyInput.value; const amount = parseInt(amountStr, 10);
-            if (!isNaN(amount) && amount > 0) { buyIngredient(currentCustomBuyIngredient, amount); hideCustomBuyModal(); } 
-            else { customBuyErrorMsg.textContent = "Invalid amount!"; setTimeout(() => { customBuyErrorMsg.textContent = ''; }, 2000); }
-        }
-
-        function exportGameState() {
-            const gameStateString = JSON.stringify(gameState);
-            const blob = new Blob([gameStateString], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = `8-bit-restaurant-save-day-${gameState.day}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-            logMessage({type: 'SYSTEM', message: 'Game state exported!', color: 'text-purple-pixel'});
-        }
-
-        function importGameState(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedState = JSON.parse(e.target.result);
-                    if (importedState.day && importedState.finances.cash !== undefined && importedState.inventory.stock) {
-                        gameState = importedState;
-                        gameState.meta.gameStartDate = new Date(gameState.meta.gameStartDate);
-                        logMessage({type: 'SYSTEM', message: `Game state for day ${gameState.day} imported successfully!`, color: 'text-purple-pixel'});
-                        updateUI();
-                    } else { throw new Error('Invalid save file structure.'); }
-                } catch (error) { console.error('Failed to import save file:', error); alert('Error: Could not load the save file. It might be corrupted or in the wrong format.'); }
+            // --- GAME DATA MODELS ---
+            const GAME_DATA = {
+                INGREDIENTS: { flour: { name: 'Flour', cost: 2 }, sugar: { name: 'Sugar', cost: 3 }, eggs: { name: 'Eggs', cost: 4 }, cheese: { name: 'Cheese', cost: 5 }, tomato: { name: 'Tomato', cost: 3 }, dough: { name: 'Dough', cost: 4 }, potato: { name: 'Potato', cost: 1 }, beef: { name: 'Beef', cost: 8 }, bun: { name: 'Bun', cost: 2 }, lettuce: { name: 'Lettuce', cost: 2 }, milkshake_mix: { name: 'Milkshake Mix', cost: 6 }, fancy_cheese: { name: 'Fancy Cheese', cost: 9}, bacon: { name: 'Bacon', cost: 7} },
+                MENU: { bread: { name: 'Bread', price: 12, ingredients: { flour: 2, eggs: 1 }, popularity: 8 }, cake: { name: 'Cake', price: 22, ingredients: { flour: 3, sugar: 4, eggs: 2 }, popularity: 6 }, pizza: { name: 'Pizza', price: 28, ingredients: { dough: 1, cheese: 2, tomato: 2 }, popularity: 10 }, fries: { name: 'Fries', price: 10, ingredients: { potato: 3 }, popularity: 9 }, burger: { name: 'Burger', price: 35, ingredients: { beef: 1, bun: 1, lettuce: 1 }, popularity: 9 }, milkshake: { name: 'Milkshake', price: 18, ingredients: { milkshake_mix: 1, sugar: 1 }, popularity: 7 }, deluxe_burger: { name: 'Deluxe Burger', price: 48, ingredients: { beef: 1, bun: 1, fancy_cheese: 1, bacon: 1 }, popularity: 5 }, gourmet_pizza: { name: 'Gourmet Pizza', price: 65, ingredients: { dough: 1, fancy_cheese: 2, bacon: 2, tomato: 1 }, popularity: 4 } },
+                EMPLOYEE_TYPES: { manager: { name: 'Manager', salary: 250, levels: { 1: { ap: { general: 25 }, xp_needed: 0 }, 2: { ap: { general: 30 }, xp_needed: 100 }, 3: { ap: { general: 50 }, xp_needed: 300 } } }, asst_manager: { name: 'Asst. Manager', salary: 180, levels: { 1: { ap: { general: 10 }, xp_needed: 0 }, 2: { ap: { general: 15 }, xp_needed: 100 }, 3: { ap: { general: 20 }, xp_needed: 300 } } }, cook: { name: 'Cook', salary: 120, levels: { 1: { ap: { cooking: 10 }, xp_needed: 0 }, 2: { ap: { cooking: 15 }, xp_needed: 100 }, 3: { ap: { cooking: 20 }, xp_needed: 300 } } }, cashier: { name: 'Cashier', salary: 70, levels: { 1: { ap: { service: 10 }, xp_needed: 0 }, 2: { ap: { service: 15 }, xp_needed: 100 }, 3: { ap: { service: 20 }, xp_needed: 300 } } }, driver: { name: 'Delivery Driver', salary: 80, levels: { 1: { ap: { delivery: 10 }, xp_needed: 0 }, 2: { ap: { delivery: 15 }, xp_needed: 100 }, 3: { ap: { delivery: 20 }, xp_needed: 300 } } }, dishwasher: { name: 'Dishwasher', salary: 60, levels: { 1: { ap: { service: 5 }, xp_needed: 0 }, 2: { ap: { service: 8 }, xp_needed: 100 }, 3: { ap: { service: 12 }, xp_needed: 300 } } } },
+                UPGRADES: { oven: { 1: { cost: 1000, description: "Dough cost -1 for baked goods." }, 2: { cost: 2500, description: "Flour cost -1 for cakes." }, 3: { cost: 5000, description: "Dough cost -2 for baked goods." }, 4: { cost: 7500, description: "Sugar cost -1 for cakes." }, 5: { cost: 15000, description: "All baked good ingredients -1." } } },
+                UNLOCKS: [ { day: 3, ingredients: ['potato', 'beef', 'bun', 'lettuce'], menu: ['fries', 'burger'] }, { day: 5, ingredients: ['milkshake_mix'], menu: ['milkshake'] }, { day: 10, ingredients: ['fancy_cheese', 'bacon'], menu: [] }, { day: 14, menu: ['deluxe_burger'] }, { day: 30, menu: ['gourmet_pizza'] } ],
+                OPEN_HOUR: 8, CLOSE_HOUR: 22
             };
-            reader.readAsText(file);
-            event.target.value = '';
-        }
+            function getCurrentGameDate(hour, minute = 0, second = 0) { const date = new Date(gameState.meta.gameStartDate); date.setDate(date.getDate() + gameState.day - 1); date.setHours(hour, minute, second, 0); return date; }
+            function formatTimestamp(date) { return gameState.meta.timeZone === 'local' ? date.toLocaleString() : date.toUTCString(); }
+            function initGame() {
+                gameState = { day: 1, finances: { cash: 5000, dailyRevenue: 0, dailyExpenses: 0 }, staff: { employees: [{ id: Date.now() + Math.random(), type: 'manager', name: GAME_DATA.EMPLOYEE_TYPES.manager.name, salary: GAME_DATA.EMPLOYEE_TYPES.manager.salary, level: 1, xp: 0 }] }, inventory: { stock: { flour: 20, sugar: 20, eggs: 15, cheese: 10, tomato: 10, dough: 10, potato: 0, beef: 0, bun: 0, lettuce: 0, milkshake_mix: 0, fancy_cheese: 0, bacon: 0 } }, unlocks: { ingredients: ['flour', 'sugar', 'eggs', 'cheese', 'tomato', 'dough'], menu: ['bread', 'cake', 'pizza'] }, settings: { maxCustomers: 50 }, upgrades: { ovenLevel: 0, marketing_active_days: 0 }, events: { critic_visit_today: false, critic_sales_target: 10 }, daily: { successfulSales: 0, deliveries: 0, purchases: [] }, lastDaySummary: { apUsed: 0, deliveries: 0, customersServed: 0 }, history: {}, meta: { isGameOver: false, gameStartDate: new Date().toISOString(), timeZone: 'local' } };
+                gameState.history[gameState.day] = []; logMessage({ type: 'SYSTEM', message: "Welcome! Let's get cooking!", color: 'text-yellow-pixel' }); updateUI(); gameOverModal.classList.add('hidden'); jsonLogModal.classList.add('hidden'); editCashModal.classList.add('hidden'); customBuyModal.classList.add('hidden'); resetConfirmModal.classList.add('hidden');
+            }
+            function nextDay() {
+                if (gameState.meta.isGameOver) return;
+                const startingAP = calculateActionPoints(); const totalAPAtStart = Object.values(startingAP).reduce((a, b) => a + b, 0);
+                gameState.finances.dailyRevenue = 0; gameState.finances.dailyExpenses = 0; gameState.daily.successfulSales = 0; gameState.daily.deliveries = 0; gameState.daily.purchases = [];
+                const totalSalary = gameState.staff.employees.reduce((sum, emp) => sum + emp.salary, 0);
+                if (totalSalary > 0) { gameState.finances.cash -= totalSalary; gameState.finances.dailyExpenses += totalSalary; logMessage({ type: 'EXPENSE', message: `Paid $${totalSalary} in salaries.`, color: 'text-red-pixel', details: { amount: totalSalary, reason: 'Salaries', cashAfter: gameState.finances.cash } }, getCurrentGameDate(GAME_DATA.OPEN_HOUR)); }
+                handleDailyEvents();
+                let ap = calculateActionPoints(); let totalPotentialCustomers = gameState.settings.maxCustomers;
+                if(gameState.upgrades.marketing_active_days > 0) { totalPotentialCustomers = Math.ceil(totalPotentialCustomers * 1.5); gameState.upgrades.marketing_active_days--; logMessage({type: 'SYSTEM', message: `Marketing campaign boosts customers! ${gameState.upgrades.marketing_active_days} days left.`, color: 'text-purple-pixel'}); }
+                const customersToday = Math.floor(Math.random() * (totalPotentialCustomers + 1)); logMessage({type: 'SYSTEM', message: `${customersToday} customers are expected today.`, color: 'text-blue-pixel'}, getCurrentGameDate(GAME_DATA.OPEN_HOUR));
+                for (let i = 0; i < customersToday; i++) { const isDelivery = Math.random() < 0.2; sellMenuItem(getCurrentGameDate(GAME_DATA.OPEN_HOUR + Math.floor(Math.random() * (GAME_DATA.CLOSE_HOUR - GAME_DATA.OPEN_HOUR)), Math.floor(Math.random() * 60)), isDelivery, ap); }
+                if (gameState.events.critic_visit_today) { if (gameState.daily.successfulSales >= gameState.events.critic_sales_target) { const randomMenuItemKey = gameState.unlocks.menu[Math.floor(Math.random() * gameState.unlocks.menu.length)]; GAME_DATA.MENU[randomMenuItemKey].popularity += 2; logMessage({ type: 'EVENT', message: `Success! The food critic was impressed. ${GAME_DATA.MENU[randomMenuItemKey].name} is now more popular!`, color: 'text-purple-pixel' }); } else { logMessage({ type: 'EVENT', message: `The food critic left unimpressed.`, color: 'text-red-pixel' }); } }
+                const totalAPAtEnd = Object.values(ap).reduce((a, b) => a + b, 0); const apUsed = totalAPAtStart - totalAPAtEnd;
+                gameState.lastDaySummary = { apUsed: apUsed, deliveries: gameState.daily.deliveries, customersServed: gameState.daily.successfulSales };
+                gameState.staff.employees.forEach(emp => { emp.xp += 10; const nextLevelData = GAME_DATA.EMPLOYEE_TYPES[emp.type].levels[emp.level + 1]; if (nextLevelData && emp.xp >= nextLevelData.xp_needed) { emp.level++; logMessage({ type: 'SYSTEM', message: `${emp.name} has leveled up to level ${emp.level}!`, color: 'text-purple-pixel'}); } });
+                logMessage({ type: 'SYSTEM', message: `Day ${gameState.day} summary: Revenue: $${gameState.finances.dailyRevenue}, Expenses: $${gameState.finances.dailyExpenses}, AP Used: ${apUsed}.`, color: 'text-yellow-pixel' }, getCurrentGameDate(GAME_DATA.CLOSE_HOUR));
+                gameState.day++; gameState.history[gameState.day] = []; checkForUnlocks();
+                if (gameState.finances.cash < 0) endGame("You've run out of money and fallen into debt!"); else if (gameState.finances.cash > 25000) endGame("Congratulations! You've built a restaurant empire!");
+                updateUI();
+            }
+            function handleDailyEvents() { gameState.events.critic_visit_today = false; if (gameState.day > 5 && Math.random() < 0.2) { gameState.events.critic_visit_today = true; logMessage({ type: 'EVENT', message: `A food critic is visiting today! Serve ${gameState.events.critic_sales_target} customers to impress them!`, color: 'text-yellow-pixel' }, getCurrentGameDate(GAME_DATA.OPEN_HOUR, 1)); } }
+            function checkForUnlocks() { const unlock = GAME_DATA.UNLOCKS.find(u => u.day === gameState.day); if (unlock) { if (unlock.ingredients) unlock.ingredients.forEach(ing => { if(!gameState.unlocks.ingredients.includes(ing)) gameState.unlocks.ingredients.push(ing); }); if (unlock.menu) unlock.menu.forEach(item => { if(!gameState.unlocks.menu.includes(item)) gameState.unlocks.menu.push(item); }); logMessage({ type: 'UNLOCK', message: `LEVEL UP! ${GAME_DATA.UNLOCKS.find(ul=>ul.day===gameState.day).message || 'New items available!'}`, color: 'text-purple-pixel', details: { unlocked: unlock } }, getCurrentGameDate(GAME_DATA.OPEN_HOUR)); } }
+            function getWeightedRandomMenuItem() { const weightedMenu = []; gameState.unlocks.menu.forEach(key => { const item = GAME_DATA.MENU[key]; for(let i = 0; i < item.popularity; i++) { weightedMenu.push(key); } }); return weightedMenu[Math.floor(Math.random() * weightedMenu.length)]; }
+            function sellMenuItem(date, isDelivery, ap) {
+                const randomItemKey = getWeightedRandomMenuItem(); const item = GAME_DATA.MENU[randomItemKey]; if (!item) return false;
+                let ingredientsCopy = {...item.ingredients}; const ovenLevel = gameState.upgrades.ovenLevel;
+                if (ovenLevel > 0) { const bakedGoods = ['pizza', 'gourmet_pizza', 'bread', 'cake']; if (bakedGoods.includes(randomItemKey)) { if (ovenLevel >= 1 && ingredientsCopy.dough) ingredientsCopy.dough = Math.max(0, ingredientsCopy.dough - 1); if (ovenLevel >= 2 && ingredientsCopy.flour) ingredientsCopy.flour = Math.max(0, ingredientsCopy.flour - 1); if (ovenLevel >= 3 && ingredientsCopy.dough) ingredientsCopy.dough = Math.max(0, ingredientsCopy.dough - 1); if (ovenLevel >= 4 && ingredientsCopy.sugar) ingredientsCopy.sugar = Math.max(0, ingredientsCopy.sugar - 1); if (ovenLevel >= 5) { for(const ing in ingredientsCopy) { ingredientsCopy[ing] = Math.max(1, ingredientsCopy[ing] - 1); } } } }
+                let canMake = Object.entries(ingredientsCopy).every(([ingKey, amount]) => gameState.inventory.stock[ingKey] >= amount); if (!canMake) { logMessage({ type: 'SALE_FAIL', message: `Couldn't make ${item.name}. Out of ingredients!`, color: 'text-red-pixel', details: { item: item.name, missing: ingredientsCopy } }, date); return false; }
+                const requiredAP = { cooking: 1, service: isDelivery ? 0 : 1, delivery: isDelivery ? 1 : 0 };
+                if (!hasEnoughAP(ap, requiredAP)) { let reason = !hasEnoughAP(ap, {cooking:1}) ? 'cooking' : (isDelivery ? 'delivery' : 'service'); logMessage({ type: 'SALE_FAIL', message: `Order for ${item.name} failed. Not enough ${reason} capacity.`, color: 'text-red-pixel', details: { item: item.name } }, date); return false; }
+                const stockBefore = { ...gameState.inventory.stock }; deductAP(ap, requiredAP); Object.entries(ingredientsCopy).forEach(([ingKey, amount]) => gameState.inventory.stock[ingKey] -= amount);
+                let salePrice = item.price; gameState.finances.cash += salePrice; gameState.finances.dailyRevenue += salePrice;
+                if (isDelivery) { gameState.daily.deliveries++; } else { gameState.daily.successfulSales++; }
+                logMessage({ type: 'SALE', message: `${isDelivery ? '[DELIVERY] ' : ''}Sold a ${item.name} for $${item.price}.`, color: 'text-green-pixel', details: { item: item.name, price: item.price, cashAfter: gameState.finances.cash, ingredientsUsed: ingredientsCopy, stockBefore, stockAfter: { ...gameState.inventory.stock } } }, date); return true;
+            }
+            function calculateActionPoints() { const ap = { cooking: 0, service: 0, delivery: 0, general: 0 }; gameState.staff.employees.forEach(emp => { const levelData = GAME_DATA.EMPLOYEE_TYPES[emp.type].levels[emp.level]; for (const key in levelData.ap) { ap[key] += levelData.ap[key]; } }); return ap; }
+            function hasEnoughAP(ap, required) { let availableGeneral = ap.general || 0; for (const type in required) { if (type !== 'general' && required[type] > 0) { const needed = required[type]; const availableSpecific = ap[type] || 0; const takenFromSpecific = Math.min(needed, availableSpecific); const remainingNeeded = needed - takenFromSpecific; if (remainingNeeded > availableGeneral) { return false; } availableGeneral -= remainingNeeded; } } return true; }
+            function deductAP(ap, required) { for (const type in required) { if (required[type] > 0) { const needed = required[type]; const takenFromSpecific = Math.min(needed, ap[type] || 0); ap[type] -= takenFromSpecific; const remainingNeeded = needed - takenFromSpecific; if (remainingNeeded > 0) { ap.general -= remainingNeeded; } } } }
+            function buyIngredient(ingredientKey, amount) { if (gameState.meta.isGameOver || amount <= 0) return; const ingredient = GAME_DATA.INGREDIENTS[ingredientKey]; const cost = ingredient.cost * amount; if (gameState.finances.cash >= cost) { gameState.finances.cash -= cost; gameState.inventory.stock[ingredientKey] += amount; gameState.daily.purchases.push({ name: ingredient.name, amount, cost }); logMessage({ type: 'INVENTORY', message: `Bought ${amount} ${ingredient.name} for $${cost}.`, color: 'text-blue-pixel', details: { item: ingredient.name, amount, cost, cashAfter: gameState.finances.cash, stockAfter: { ...gameState.inventory.stock } } }); updateUI(); } else { logMessage({ type: 'INVENTORY_FAIL', message: `Not enough cash to buy ${ingredient.name}.`, color: 'text-red-pixel', details: { item: ingredient.name, cost } }); updateUI(); } }
+            function bulkAddStock(amount) { let totalCost = 0; gameState.unlocks.ingredients.forEach(key => { totalCost += GAME_DATA.INGREDIENTS[key].cost * amount; }); if (gameState.finances.cash >= totalCost) { gameState.finances.cash -= totalCost; gameState.unlocks.ingredients.forEach(key => { gameState.inventory.stock[key] += amount; }); gameState.daily.purchases.push({ name: 'Bulk Purchase', amount, cost: totalCost }); logMessage({ type: 'INVENTORY', message: `Bulk purchased +${amount} of all ingredients for $${totalCost}.`, color: 'text-blue-pixel', details: { amount, cost: totalCost, cashAfter: gameState.finances.cash } }); updateUI(); } else { logMessage({ type: 'INVENTORY_FAIL', message: `Not enough cash for bulk purchase (cost: $${totalCost}).`, color: 'text-red-pixel' }); } }
+            function bulkSetStock(amount) { gameState.unlocks.ingredients.forEach(key => { gameState.inventory.stock[key] = amount; }); logMessage({ type: 'INVENTORY', message: `[TEST] Bulk set all stock to ${amount}.`, color: 'text-yellow-pixel' }); updateUI(); }
+            function addEmployee(typeKey) { if (gameState.meta.isGameOver || !GAME_DATA.EMPLOYEE_TYPES[typeKey]) return; const empTmpl = GAME_DATA.EMPLOYEE_TYPES[typeKey]; const newEmployee = { id: Date.now() + Math.random(), type: typeKey, name: empTmpl.name, salary: empTmpl.salary, level: 1, xp: 0 }; gameState.staff.employees.push(newEmployee); logMessage({ type: 'HIRE', message: `Hired a ${empTmpl.name} for $${empTmpl.salary}/day.`, color: 'text-blue-pixel', details: { employee: newEmployee } }); updateUI(); }
+            function removeEmployee(typeKey) { if (gameState.meta.isGameOver || !GAME_DATA.EMPLOYEE_TYPES[typeKey]) return; const indexToRemove = gameState.staff.employees.findLastIndex(emp => emp.type === typeKey); if (indexToRemove !== -1) { const removedEmployee = gameState.staff.employees.splice(indexToRemove, 1)[0]; logMessage({ type: 'FIRE', message: `Removed a ${removedEmployee.name}.`, color: 'text-red-pixel', details: { employee: removedEmployee } }); updateUI(); } }
+            function purchaseUpgrade(type) { if (type === 'oven') { const nextLevel = gameState.upgrades.ovenLevel + 1; const upgradeData = GAME_DATA.UPGRADES.oven[nextLevel]; if (upgradeData && gameState.finances.cash >= upgradeData.cost) { gameState.finances.cash -= upgradeData.cost; gameState.upgrades.ovenLevel = nextLevel; gameState.daily.purchases.push({ name: `Oven Upgrade Lvl ${nextLevel}`, amount: 1, cost: upgradeData.cost }); logMessage({type: 'UPGRADE', message: `Upgraded oven to Level ${nextLevel}!`, color: 'text-purple-pixel'}); updateUI(); } } else if (type === 'marketing' && gameState.finances.cash >= 500) { gameState.finances.cash -= 500; gameState.upgrades.marketing_active_days += 3; gameState.daily.purchases.push({ name: 'Marketing Campaign', amount: 1, cost: 500 }); logMessage({type: 'UPGRADE', message: 'Launched a Marketing Campaign! Expect more customers for 3 days.', color: 'text-purple-pixel'}); updateUI(); } }
+            function endGame(message) { gameState.meta.isGameOver = true; gameOverMessage.textContent = message; gameOverModal.classList.remove('hidden'); }
+            function updateUI() {
+                dayDisplay.textContent = gameState.day; timezoneDisplay.textContent = gameState.meta.timeZone.toUpperCase(); cashDisplay.textContent = `$${gameState.finances.cash}`; revenueDisplay.textContent = `$${gameState.finances.dailyRevenue}`;
+                const purchaseTotal = gameState.daily.purchases.reduce((sum, p) => sum + p.cost, 0); const totalDailyExpenses = gameState.finances.dailyExpenses + purchaseTotal; expensesDisplay.textContent = `$${totalDailyExpenses}`;
+                customerSlider.value = gameState.settings.maxCustomers; customerCountDisplay.textContent = gameState.settings.maxCustomers; summaryCustomers.textContent = gameState.lastDaySummary.customersServed; summaryDeliveries.textContent = gameState.lastDaySummary.deliveries; summaryAP.textContent = gameState.lastDaySummary.apUsed;
+                const nextOvenLevel = gameState.upgrades.ovenLevel + 1; const nextOvenUpgrade = GAME_DATA.UPGRADES.oven[nextOvenLevel]; if (nextOvenUpgrade) { upgradeOvenBtn.textContent = `Oven Lvl ${nextOvenLevel} ($${nextOvenUpgrade.cost})`; upgradeOvenBtn.disabled = gameState.finances.cash < nextOvenUpgrade.cost; } else { upgradeOvenBtn.textContent = 'Oven Max Level'; upgradeOvenBtn.disabled = true; }
+                marketingBtn.disabled = gameState.finances.cash < 500;
+                menuItemsContainer.innerHTML = gameState.unlocks.menu.map(key => { const item = GAME_DATA.MENU[key]; return `<div><p class="font-bold">${item.name} - <span class="text-green-pixel">$${item.price}</span></p><p class="text-xs text-gray-400">Popularity: ${item.popularity}</p></div>`; }).join('');
+                employeeControlsContainer.innerHTML = Object.entries(GAME_DATA.EMPLOYEE_TYPES).map(([key, emp]) => { const count = gameState.staff.employees.filter(e => e.type === key).length; return `<div class="grid grid-cols-3 items-center gap-2 text-xs"><span class="col-span-1">${emp.name} ($${emp.salary})</span><div class="col-span-2 flex items-center justify-end gap-2"><button class="btn px-2 py-1" onclick="window.removeEmployee('${key}')" ${count === 0 ? 'disabled' : ''}>-</button><span class="w-4 text-center">${count}</span><button class="btn px-2 py-1" onclick="window.addEmployee('${key}')">+</button></div></div>`; }).join('');
+                const currentAP = calculateActionPoints(); const totalAP = Object.values(currentAP).reduce((a, b) => a + b, 0); apDisplay.innerHTML = `<p>Cooking AP: ${currentAP.cooking}</p><p>Service AP: ${currentAP.service}</p><p>Delivery AP: ${currentAP.delivery}</p><p>General AP: ${currentAP.general}</p><p class="mt-2 text-yellow-pixel">Total AP: ${totalAP}</p>`;
+                stockItemsContainer.innerHTML = gameState.unlocks.ingredients.map(key => { const ingredient = GAME_DATA.INGREDIENTS[key]; return `<div class="grid grid-cols-5 items-center gap-2 text-xs"><span class="col-span-5 sm:col-span-1">${ingredient.name}: ${gameState.inventory.stock[key]}</span><div class="col-span-5 sm:col-span-4 grid grid-cols-4 gap-1"><button class="btn py-1 rounded" onclick="window.buyIngredient('${key}', 10)">+10</button><button class="btn py-1 rounded" onclick="window.buyIngredient('${key}', 100)">+100</button><button class="btn py-1 rounded col-span-2" onclick="window.showCustomBuyModal('${key}')">Custom</button></div></div>`; }).join('');
+                updateReceiptUI(); renderLog();
+            }
+            function updateReceiptUI() {
+                receiptItemsContainer.innerHTML = ''; let purchaseTotal = 0;
+                gameState.daily.purchases.forEach(purchase => { const receiptItemEl = document.createElement('p'); receiptItemEl.textContent = `${purchase.amount}x ${purchase.name} - $${purchase.cost}`; receiptItemsContainer.appendChild(receiptItemEl); purchaseTotal += purchase.cost; });
+                const laborCost = gameState.finances.dailyExpenses; if (laborCost > 0) { const laborEl = document.createElement('p'); laborEl.textContent = `Labor Costs - $${laborCost}`; receiptItemsContainer.appendChild(laborEl); }
+                const totalCosts = purchaseTotal + laborCost; receiptTotal.textContent = `$${totalCosts}`;
+            }
+            function formatLogEntryHTML(log) { let detailsHTML = ''; const details = log.details || {}; switch (log.type) { case 'SALE': if (details.ingredientsUsed) { const ingredientsText = Object.entries(details.ingredientsUsed).map(([key, amount]) => `${amount} ${GAME_DATA.INGREDIENTS[key].name}`).join(', '); detailsHTML = `<p class="text-xs text-gray-400 pl-4">Ingredients: ${ingredientsText}</p><p class="text-xs text-gray-400 pl-4">Cash after sale: $${details.cashAfter}</p>`; } break; case 'INVENTORY': detailsHTML = `<p class="text-xs text-gray-400 pl-4">Cash after purchase: $${details.cashAfter}</p>`; break; case 'EXPENSE': detailsHTML = `<p class="text-xs text-gray-400 pl-4">Cash after expense: $${details.cashAfter}</p>`; break; } return `<div class="log-message pb-2"><p class="${log.color}">[${log.timestamp}] ${log.message}</p>${detailsHTML}</div>`; }
+            function logMessage(logObject, date = new Date()) { logObject.timestamp = formatTimestamp(date); logObject.raw_timestamp = date.toISOString(); if (!gameState.history[gameState.day]) gameState.history[gameState.day] = []; gameState.history[gameState.day].unshift(logObject); if(document.body.contains(gameLogContainer)) renderLog(); }
+            function renderLog() { const currentLog = gameState.history[gameState.day] || []; gameLogContainer.innerHTML = currentLog.map(formatLogEntryHTML).join(''); }
+            function toggleTimezone() { gameState.meta.timeZone = gameState.meta.timeZone === 'local' ? 'UTC' : 'local'; updateUI(); }
+            function showJsonLog() { const logCopy = JSON.parse(JSON.stringify(gameState.history)); for(const day in logCopy) { logCopy[day].forEach(log => { log.timestamp = formatTimestamp(new Date(log.raw_timestamp)); delete log.raw_timestamp; }); } jsonLogTextarea.value = JSON.stringify(logCopy, null, 2); jsonLogModal.classList.remove('hidden'); }
+            function hideJsonLog() { jsonLogModal.classList.add('hidden'); }
+            function showCashModal() { cashInput.value = gameState.finances.cash; cashErrorMsg.textContent = ''; editCashModal.classList.remove('hidden'); cashInput.focus(); }
+            function hideCashModal() { editCashModal.classList.add('hidden'); }
+            function saveNewCash() { const currentCash = gameState.finances.cash, newCashStr = cashInput.value, newCash = parseInt(newCashStr, 10); if (!isNaN(newCash) && newCash >= 0) { gameState.finances.cash = newCash; logMessage({ type: 'MANUAL_EDIT', message: `Cash manually updated from $${currentCash} to $${newCash}.`, color: 'text-yellow-pixel', details: { from: currentCash, to: newCash } }); updateUI(); hideCashModal(); } else { cashErrorMsg.textContent = "Invalid number!"; setTimeout(() => { cashErrorMsg.textContent = ''; }, 2000); } }
+            function showCustomBuyModal(ingredientKey) { currentCustomBuyIngredient = ingredientKey; customBuyItemName.textContent = `Buying ${GAME_DATA.INGREDIENTS[ingredientKey].name}`; customBuyInput.value = ''; customBuyErrorMsg.textContent = ''; customBuyModal.classList.remove('hidden'); customBuyInput.focus(); }
+            function hideCustomBuyModal() { customBuyModal.classList.add('hidden'); }
+            function saveCustomBuy() { const amountStr = customBuyInput.value; const amount = parseInt(amountStr, 10); if (!isNaN(amount) && amount > 0) { buyIngredient(currentCustomBuyIngredient, amount); hideCustomBuyModal(); } else { customBuyErrorMsg.textContent = "Invalid amount!"; setTimeout(() => { customBuyErrorMsg.textContent = ''; }, 2000); } }
+            function exportGameState() { const gameStateString = JSON.stringify(gameState); const blob = new Blob([gameStateString], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `8-bit-restaurant-save-day-${gameState.day}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); logMessage({type: 'SYSTEM', message: 'Game state exported!', color: 'text-purple-pixel'}); }
+            function importGameState(event) {
+                const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
+                reader.onload = function(e) { try { const importedState = JSON.parse(e.target.result); if (importedState.day && importedState.finances.cash !== undefined && importedState.inventory.stock) { gameState = importedState; gameState.meta.gameStartDate = new Date(gameState.meta.gameStartDate); logMessage({type: 'SYSTEM', message: `Game state for day ${gameState.day} imported successfully!`, color: 'text-purple-pixel'}); updateUI(); } else { throw new Error('Invalid save file structure.'); } } catch (error) { console.error('Failed to import save file:', error); alert('Error: Could not load the save file. It might be corrupted or in the wrong format.'); } };
+                reader.readAsText(file); event.target.value = '';
+            }
+            function copyLogToClipboard() { jsonLogTextarea.select(); try { document.execCommand('copy'); copyLogBtn.textContent = 'Copied!'; setTimeout(() => { copyLogBtn.textContent = 'Copy to Clipboard'; }, 2000); } catch (err) { console.error('Failed to copy log: ', err); copyLogBtn.textContent = 'Error!'; setTimeout(() => { copyLogBtn.textContent = 'Copy to Clipboard'; }, 2000); } }
+            
+            // Expose functions to global scope so inline onclick attributes can find them
+            window.buyIngredient = buyIngredient; window.addEmployee = addEmployee; window.removeEmployee = removeEmployee;
+            window.bulkAddStock = bulkAddStock; window.bulkSetStock = bulkSetStock; window.showCustomBuyModal = showCustomBuyModal;
 
-        function copyLogToClipboard() { jsonLogTextarea.select(); try { document.execCommand('copy'); copyLogBtn.textContent = 'Copied!'; setTimeout(() => { copyLogBtn.textContent = 'Copy to Clipboard'; }, 2000); } catch (err) { console.error('Failed to copy log: ', err); copyLogBtn.textContent = 'Error!'; setTimeout(() => { copyLogBtn.textContent = 'Copy to Clipboard'; }, 2000); } }
+            editCashBtn.addEventListener('click', showCashModal); saveCashBtn.addEventListener('click', saveNewCash); cancelCashBtn.addEventListener('click', hideCashModal);
+            saveCustomBuyBtn.addEventListener('click', saveCustomBuy); cancelCustomBuyBtn.addEventListener('click', hideCustomBuyModal);
+            restartBtn.addEventListener('click', initGame); nextDayBtn.addEventListener('click', nextDay); timezoneBtn.addEventListener('click', toggleTimezone);
+            jsonLogBtn.addEventListener('click', showJsonLog); closeLogBtn.addEventListener('click', hideJsonLog); copyLogBtn.addEventListener('click', copyLogToClipboard);
+            exportBtn.addEventListener('click', exportGameState);
+            importBtn.addEventListener('click', () => importFileInput.click()); importFileInput.addEventListener('change', importGameState);
+            customerSlider.addEventListener('input', (e) => { gameState.settings.maxCustomers = parseInt(e.target.value, 10); customerCountDisplay.textContent = e.target.value; });
+            upgradeOvenBtn.addEventListener('click', () => purchaseUpgrade('oven')); marketingBtn.addEventListener('click', () => purchaseUpgrade('marketing'));
+            resetGameBtn.addEventListener('click', () => resetConfirmModal.classList.remove('hidden')); confirmResetBtn.addEventListener('click', initGame); cancelResetBtn.addEventListener('click', () => resetConfirmModal.classList.add('hidden'));
 
-        // --- EVENT LISTENERS ---
-        editCashBtn.addEventListener('click', showCashModal); saveCashBtn.addEventListener('click', saveNewCash); cancelCashBtn.addEventListener('click', hideCashModal);
-        saveCustomBuyBtn.addEventListener('click', saveCustomBuy); cancelCustomBuyBtn.addEventListener('click', hideCustomBuyModal);
-        restartBtn.addEventListener('click', initGame); nextDayBtn.addEventListener('click', nextDay); timezoneBtn.addEventListener('click', toggleTimezone);
-        jsonLogBtn.addEventListener('click', showJsonLog); closeLogBtn.addEventListener('click', hideJsonLog); copyLogBtn.addEventListener('click', copyLogToClipboard);
-        exportBtn.addEventListener('click', exportGameState);
-        importBtn.addEventListener('click', () => importFileInput.click());
-        importFileInput.addEventListener('change', importGameState);
-        customerSlider.addEventListener('input', (e) => { gameState.settings.maxCustomers = parseInt(e.target.value, 10); customerCountDisplay.textContent = e.target.value; });
-        upgradeOvenBtn.addEventListener('click', () => purchaseUpgrade('oven'));
-        marketingBtn.addEventListener('click', () => purchaseUpgrade('marketing'));
-        resetGameBtn.addEventListener('click', () => resetConfirmModal.classList.remove('hidden'));
-        confirmResetBtn.addEventListener('click', () => { initGame(); });
-        cancelResetBtn.addEventListener('click', () => resetConfirmModal.classList.add('hidden'));
+            window.onload = initGame;
+        })();
 
-        // --- INITIALIZE GAME ---
-        window.onload = initGame;
+        // --- INFOGRAPHIC 1 CHARTS SCRIPT (from infographic.html) ---
+        (() => {
+            // Renamed canvas IDs to be unique (employeeAPChart1, menuPopularityChart1)
+            if (!document.getElementById('employeeAPChart1')) return; // Exit if infographic DOM isn't present
+            
+            const employeeAPCtx = document.getElementById('employeeAPChart1').getContext('2d');
+            new Chart(employeeAPCtx, { type: 'bar', data: { labels: ['Manager', 'Cook', 'Cashier', 'Driver'], datasets: [{ label: 'Starting Action Points (Lvl 1)', data: [25, 10, 10, 10], backgroundColor: ['#FFC107', '#FF5722', '#4CAF50', '#2196F3'], borderColor: '#555555', borderWidth: 2 }] }, options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } }, grid: { color: 'rgba(255, 255, 255, 0.2)' } }, x: { ticks: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } }, grid: { color: 'rgba(255, 255, 255, 0.1)' } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { title: function(tooltipItems) { const item = tooltipItems[0]; let label = item.chart.data.labels[item.dataIndex]; return Array.isArray(label) ? label.join(' ') : label; } } } } } });
+            const menuPopularityCtx = document.getElementById('menuPopularityChart1').getContext('2d');
+            new Chart(menuPopularityCtx, { type: 'bubble', data: { datasets: [{ label: 'Pizza', data: [{ x: 28, y: 10, r: 25 }], backgroundColor: '#FF5722' }, { label: 'Burger', data: [{ x: 35, y: 9, r: 22 }], backgroundColor: '#FFC107' }, { label: 'Bread', data: [{ x: 12, y: 8, r: 20 }], backgroundColor: '#4CAF50' }, { label: 'Gourmet Pizza', data: [{ x: 65, y: 4, r: 12 }], backgroundColor: '#2196F3' }] }, options: { maintainAspectRatio: false, scales: { y: { title: { display: true, text: 'Popularity Score', color: '#FFFFFF', font: { size: 16, family: "'VT323', monospace" } }, ticks: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } }, grid: { color: 'rgba(255, 255, 255, 0.2)' } }, x: { title: { display: true, text: 'Price ($)', color: '#FFFFFF', font: { size: 16, family: "'VT323', monospace" } }, ticks: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } }, grid: { color: 'rgba(255, 255, 255, 0.2)' } } }, plugins: { legend: { labels: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } } }, tooltip: { callbacks: { title: function(tooltipItems) { const item = tooltipItems[0]; let label = item.chart.data.datasets[item.datasetIndex].label; return Array.isArray(label) ? label.join(' ') : label; }, label: function(context) { return `Price: $${context.parsed.x}, Popularity: ${context.parsed.y}`; } } } } } });
+        })();
+        
+        // --- INFOGRAPHIC 2 CHARTS SCRIPT (from infographic2.html) ---
+        (() => {
+            // Renamed canvas IDs to be unique (employeeAPChart2, menuPopularityChart2)
+            if (!document.getElementById('employeeAPChart2')) return; // Exit if infographic DOM isn't present
+            
+            const employeeAPCtx = document.getElementById('employeeAPChart2').getContext('2d');
+            new Chart(employeeAPCtx, { type: 'bar', data: { labels: [['Manager', '(General)'], 'Cook', 'Cashier', 'Driver'], datasets: [{ label: 'Starting Action Points (Lvl 1)', data: [25, 10, 10, 10], backgroundColor: ['#FFD600', '#FF3D00', '#76FF03', '#00E5FF'], borderColor: '#444444', borderWidth: 3 }] }, options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } }, grid: { color: 'rgba(255, 255, 255, 0.2)' } }, x: { ticks: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } }, grid: { display: false } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { title: function(tooltipItems) { const item = tooltipItems[0]; let label = item.chart.data.labels[item.dataIndex]; return Array.isArray(label) ? label.join(' ') : label; } } } } } });
+            const menuPopularityCtx = document.getElementById('menuPopularityChart2').getContext('2d');
+            new Chart(menuPopularityCtx, { type: 'bubble', data: { datasets: [{ label: 'Pizza', data: [{ x: 28, y: 10, r: 25 }], backgroundColor: '#FF3D00' }, { label: 'Burger', data: [{ x: 35, y: 9, r: 22 }], backgroundColor: '#FFD600' }, { label: 'Bread', data: [{ x: 12, y: 8, r: 20 }], backgroundColor: '#76FF03' }, { label: 'Gourmet Pizza', data: [{ x: 65, y: 4, r: 12 }], backgroundColor: '#00E5FF' }] }, options: { maintainAspectRatio: false, scales: { y: { title: { display: true, text: 'Popularity Score', color: '#FFFFFF', font: { size: 16, family: "'VT323', monospace" } }, ticks: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } }, grid: { color: 'rgba(255, 255, 255, 0.2)' } }, x: { title: { display: true, text: 'Price ($)', color: '#FFFFFF', font: { size: 16, family: "'VT323', monospace" } }, ticks: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } }, grid: { color: 'rgba(255, 255, 255, 0.2)' } } }, plugins: { legend: { labels: { color: '#FFFFFF', font: { size: 14, family: "'VT323', monospace" } } }, tooltip: { callbacks: { title: function(tooltipItems) { const item = tooltipItems[0]; let label = item.chart.data.datasets[item.datasetIndex].label; return Array.isArray(label) ? label.join(' ') : label; }, label: function(context) { return `Price: $${context.parsed.x}, Popularity: ${context.parsed.y}`; } } } } } });
+        })();
     </script>
-
 </body>
 </html>
